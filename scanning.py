@@ -10,13 +10,14 @@ from datetime import timedelta
 
 from sdcclient import SdScanningClient
 
-secure_api_token = os.getenv('SECURE_API_TOKEN').replace('\n', '')
-secure_url = os.getenv('SECURE_URL')
-scheduled_run_minutes = int(os.getenv('SCHEDULED_RUN_MINUTES'))
-prom_exp_url_port = int(os.getenv('PROM_EXP_URL_PORT'))
-batch_limit = int(os.getenv('BATCH_LIMIT'))
-customer_name = os.getenv('CUSTOMER_NAME')
-query_features_list = os.getenv('QUERY_FEATURES_LIST')
+# secure_api_token = os.getenv('SECURE_API_TOKEN').replace('\n', '')
+# secure_url = os.getenv('SECURE_URL')
+# scheduled_run_minutes = int(os.getenv('SCHEDULED_RUN_MINUTES'))
+# prom_exp_url_port = int(os.getenv('PROM_EXP_URL_PORT'))
+# batch_limit = int(os.getenv('BATCH_LIMIT'))
+# customer_name = os.getenv('CUSTOMER_NAME')
+# query_features_list = os.getenv('QUERY_FEATURES_LIST')
+
 
 
 # all - query all features
@@ -363,7 +364,7 @@ class SecureMetricsCollector(object):
                                                                        'sysdig_secure_customer_name'])
 
         # iam
-        prom_metric_iam_policies = GaugeMetricFamily("sysdig_secure_iam_polices",
+        prom_metric_iam_policy = GaugeMetricFamily("sysdig_secure_iam_policy",
                                                      'IAM policies',
                                                      labels=['sysdig_secure_iam_policy_name',
                                                              'sysdig_secure_iam_actors_total',
@@ -375,8 +376,56 @@ class SecureMetricsCollector(object):
                                                              'sysdig_secure_iam_policy_type',
                                                              'sysdig_secure_iam_excessive_risk_category',
                                                              'sysdig_secure_iam_execssive_risky_permissions_total',
-                                                             'sysdig_secure_iam_excessive_risk_score'
+                                                             'sysdig_secure_iam_excessive_risk_score',
+                                                             'sysdig_secure_customer_name'
                                                              ])
+
+        prom_metric_iam_user = GaugeMetricFamily("sysdig_secure_iam_user",
+                                                     'IAM users',
+                                                     labels=['sysdig_secure_iam_user_name',
+                                                             'sysdig_secure_iam_user_policies_total',
+                                                             'sysdig_secure_iam_permissions_given_total',
+                                                             'sysdig_secure_iam_permissions_effective_total',
+                                                             'sysdig_secure_iam_permissions_unused_total',
+                                                             'sysdig_secure_iam_permissions_used_total',
+                                                             'sysdig_secure_iam_risk_category',
+                                                             'sysdig_secure_iam_risky_permissions_total',
+                                                             'sysdig_secure_iam_risk_score',
+                                                             'sysdig_secure_iam_excessive_risk_category',
+                                                             'sysdig_secure_iam_execssive_risky_permissions_total',
+                                                             'sysdig_secure_iam_excessive_risk_score',
+                                                             'sysdig_secure_iam_user_risk_admin',
+                                                             'sysdig_secure_iam_user_risk_inactive',
+                                                             'sysdig_secure_iam_user_risk_no_mfa',
+                                                             'sysdig_secure_iam_user_risk_key1_not_rotated',
+                                                             'sysdig_secure_iam_user_risk_key2_not_rotated',
+                                                             'sysdig_secure_iam_user_risk_multiple_keys',
+                                                             'sysdig_secure_customer_name'
+                                                             ])
+
+        prom_metric_iam_role = GaugeMetricFamily("sysdig_secure_iam_role",
+                                                 'IAM roles',
+                                                 labels=['sysdig_secure_iam_role_name',
+                                                         'sysdig_secure_iam_role_policies_total',
+                                                         'sysdig_secure_iam_permissions_given_total',
+                                                         'sysdig_secure_iam_permissions_effective_total',
+                                                         'sysdig_secure_iam_permissions_unused_total',
+                                                         'sysdig_secure_iam_permissions_used_total',
+                                                         'sysdig_secure_iam_risk_category',
+                                                         'sysdig_secure_iam_risky_permissions_total',
+                                                         'sysdig_secure_iam_risk_score',
+                                                         'sysdig_secure_iam_excessive_risk_category',
+                                                         'sysdig_secure_iam_execssive_risky_permissions_total',
+                                                         'sysdig_secure_iam_excessive_risk_score',
+                                                         'sysdig_secure_iam_role_risk_admin',
+                                                         'sysdig_secure_iam_role_risk_inactive',
+                                                         'sysdig_secure_iam_role_risk_no_mfa',
+                                                         'sysdig_secure_iam_role_risk_key1_not_rotated',
+                                                         'sysdig_secure_iam_role_risk_key2_not_rotated',
+                                                         'sysdig_secure_iam_role_risk_multiple_keys',
+                                                         'sysdig_secure_customer_name'
+                                                         ])
+
 
         curr_date = datetime.now()
         curr_date_str = curr_date.strftime("%d/%m/%Y %H:%M")
@@ -586,6 +635,7 @@ class SecureMetricsCollector(object):
             return
 
         print("Querying metrics from Sysdig Secure Backend using APIs....")
+        # ------------------------------------------------------------------------------
 
         last_run_date = curr_date
         next_run_date = curr_date + timedelta(minutes=scheduled_run_minutes)
@@ -807,6 +857,36 @@ class SecureMetricsCollector(object):
             yield prom_metric_benchmark_control_warn
 
         first_time_running = False
+
+
+        # iam
+        if test_iam in test_area:
+            try:
+                iam_policies, iam_users, iam_roles = iam_prom_exporter()
+
+            except Exception as ex:
+                logging.error(ex)
+                return
+
+            print("iam policies count - " + str(len(iam_policies)))
+            print("iam users count - " + str(len(iam_users)))
+            print("iam roles count - " + str(len(iam_roles)))
+
+            total_requests += 1
+
+            for policy in iam_policies:
+                prom_metric_iam_policy.add_metric(
+                    [policy["policyName"], policy["actorsTotal"], policy["numPermissionsGiven"], policy["numPermissionsUnused"],
+                     policy["riskCategory"], policy["riskyPermissions"], policy["riskScore"], policy["policyType"], policy["excessiveRiskCategory"],
+                     policy["excessiveRiskyPermissions"], policy["excessiveRiskScore"], policy["customerName"]],
+                    scanning["critical"]
+                )
+
+            yield prom_metric_scanning_v2_images_critical
+
+            print("yielded scanning_v2 prom exporter")
+
+
 
 
 def scanning_v2_prom_exporter():
@@ -1444,6 +1524,177 @@ def benchmark_prom_exporter():
         raise
 
     return benchmark_data_list
+
+
+def iam_prom_exporter():
+    try:
+        iam_policies = query_iam_policies_batch()
+        iam_users = query_iam_users_roles_batch("user")
+        iam_roles = query_iam_users_roles_batch("role")
+
+
+
+    except:
+        raise
+
+    return iam_policies, iam_users, iam_roles
+
+
+def query_iam_policies_batch():
+    policy_list, next_cursor = query_iam_policies("")
+    try:
+        while next_cursor != "":
+            policy_list_temp, next_cursor = query_iam_policies(next_cursor)
+            policy_list = policy_list + policy_list_temp
+    except:
+        raise
+
+    return policy_list
+
+
+def query_iam_policies(next_cursor):
+    global batch_limit
+
+    auth_string = "Bearer " + secure_api_token
+
+    url = secure_url + '/api/cloud/v2/policies' \
+                       '?cursor=' + next_cursor + \
+          '&limit=' + str(batch_limit) + '&output=json'
+
+    try:
+        response = requests.get(url, headers={"Authorization": auth_string})
+    except Exception as ex:
+        logging.error("Received an exception while invoking the url: " + url)
+        logging.error(ex)
+        raise
+
+    policy_data_list = []
+    policy_data_dict = {}
+
+    if response.status_code == 200:
+        all_policies_temp = json.loads(response.text)
+        all_policies = all_policies_temp["data"]
+        next_cursor = all_policies_temp["options"]["next"]
+
+        for x in all_policies:
+            policy_data_dict["policyName"] = x["policyName"]
+            policy_data_dict["actorsTotal"] = len(x['actors'])
+            policy_data_dict["numPermissionsGiven"] = x["numPermissionsGiven"]
+            policy_data_dict["numPermissionsUnused"] = x["numPermissionsUnused"]
+            policy_data_dict["riskCategory"] = x["riskCategory"]
+            policy_data_dict["riskyPermissions"] = x["riskyPermissions"]
+            policy_data_dict["riskScore"] = x["riskScore"]
+            policy_data_dict["excessiveRiskCategory"] = x["excessiveRiskCategory"]
+            policy_data_dict["excessiveRiskyPermissions"] = x["excessiveRiskyPermissions"]
+            policy_data_dict["excessiveRiskScore"] = x["excessiveRiskScore"]
+            policy_data_dict["customerName"] = customer_name
+
+            policy_data_list.append(policy_data_dict.copy())
+            policy_data_dict.clear()
+    else:
+        logging.error("Received an error trying to get the response from: " + url)
+        logging.error("Error message: " + response.text)
+        raise
+
+    return policy_data_list, next_cursor
+
+
+def query_iam_users_roles_batch(kind):
+    user_list, next_cursor = query_iam_users_roles("", kind)
+    try:
+        while next_cursor != "":
+            user_list_temp, next_cursor = query_iam_users_roles(next_cursor, kind)
+            user_list = user_list + user_list_temp
+    except:
+        raise
+
+    return user_list
+
+
+def query_iam_users_roles(next_cursor, kind):
+    global batch_limit
+
+    auth_string = "Bearer " + secure_api_token
+
+    url = secure_url + '/api/cloud/v2/users' \
+                       '?cursor=' + next_cursor + \
+          '&limit=' + str(batch_limit) + '&kind=' + kind + '&output=json'
+
+    try:
+        response = requests.get(url, headers={"Authorization": auth_string})
+    except Exception as ex:
+        logging.error("Received an exception while invoking the url: " + url)
+        logging.error(ex)
+        raise
+
+    user_role_data_list = []
+    user_role_data_dict = {}
+
+    if response.status_code == 200:
+        all_users_roles_temp = json.loads(response.text)
+        all_users_roles = all_users_roles_temp["data"]
+        next_cursor = all_users_roles_temp["options"]["next"]
+
+
+        admin_risk = "Admin"
+        inactive_risk = "Inactive"
+        no_mfa_risk = "No MFA"
+        key_1_not_rotated_risk = "Access Key 1 Not Rotated"
+        key_2_not_rotated_risk = "Access Key 2 Not Rotated"
+        multiple_keys_risk = "Multiple Access Keys Active"
+
+        a = 0
+        for x in all_users_roles:
+            user_role_data_dict["actorName"] = x["actorName"]
+            user_role_data_dict["policiesTotal"] = len(x['policies'])
+            user_role_data_dict["numPermissionsGiven"] = x["numPermissionsGiven"]
+            user_role_data_dict["effectivePermissionsCount"] = x["effectivePermissionsCount"]
+            user_role_data_dict["numPermissionsUnused"] = x["numPermissionsUnused"]
+            user_role_data_dict["numPermissionsUsed"] = x["numPermissionsUsed"]
+            user_role_data_dict["riskCategory"] = x["riskCategory"]
+            user_role_data_dict["riskyPermissions"] = x["riskyPermissions"]
+            user_role_data_dict["riskScore"] = x["riskScore"]
+            user_role_data_dict["excessiveRiskCategory"] = x["excessiveRiskCategory"]
+            user_role_data_dict["excessiveRiskyPermissions"] = x["excessiveRiskyPermissions"]
+            user_role_data_dict["excessiveRiskScore"] = x["excessiveRiskScore"]
+            user_role_data_dict["customerName"] = customer_name
+
+            risk_list = x["labels"]["risk"]
+
+            print(a)
+            a = a + 1
+
+            user_role_data_dict["admin"] = "no"
+            user_role_data_dict["inactive"] = "no"
+            user_role_data_dict["no_mfa"] = "no"
+            user_role_data_dict["key1_not_rotated"] = "no"
+            user_role_data_dict["key2_not_rotated"] = "no"
+            user_role_data_dict["multiple_keys"] = "no"
+
+            if risk_list is not None:
+                for risk in risk_list:
+                    if risk == admin_risk:
+                        user_role_data_dict["admin"] = "yes"
+                    elif risk == inactive_risk:
+                        user_role_data_dict["inactive"] = "yes"
+                    elif risk == no_mfa_risk:
+                        user_role_data_dict["no_mfa"] = "yes"
+                    elif risk == key_1_not_rotated_risk:
+                        user_role_data_dict["key1_not_rotated"] = "yes"
+                    elif risk == key_2_not_rotated_risk:
+                        user_role_data_dict["key2_not_rotated"] = "yes"
+                    elif risk == multiple_keys_risk:
+                        user_role_data_dict["multiple_keys"] = "yes"
+
+            user_role_data_list.append(user_role_data_dict.copy())
+            user_role_data_dict.clear()
+    else:
+        logging.error("Received an error trying to get the response from: " + url)
+        logging.error("Error message: " + response.text)
+        raise
+
+    return user_role_data_list, next_cursor
+
 
 
 '''
