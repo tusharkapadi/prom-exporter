@@ -29,8 +29,8 @@ jobs:
 
             - name: Build docker image
               run: |
-                docker build . --file Dockerfile --tag ${{ env.CONTAINER_REGISTRY }}/${{ env.CONTAINER_NAME }}:${{ github.sha }}
+                docker build . --file Dockerfile --tag ${{ env.CONTAINER_NAME }}:${{ github.sha }}
 
-            - name: Push the image if scan is Successful
+            - name: Push the image
               run: |
-                docker push ${{ env.CONTAINER_REGISTRY }}/${{ env.CONTAINER_NAME }}:${{ github.sha }}
+                docker push ${{ env.CONTAINER_NAME }}:${{ github.sha }}
