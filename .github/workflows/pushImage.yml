@@ -8,7 +8,7 @@ on:
 
 env:
     CONTAINER_REGISTRY: docker.io
-    CONTAINER_NAME: hack22image
+    CONTAINER_NAME: secure-prom-exporter-scanning
     DEPLOYMENT_MANIFEST_PATH: |
         ./deploy.yml
         ./secret.yml
@@ -29,6 +29,7 @@ jobs:
 
             - name: Build docker image
               run: |
+                echo $GITHUB_RUN_NUMBER
                 docker build . --file Dockerfile --tag ${{ secrets.DOCKER_USER }}/${{ env.CONTAINER_NAME }}:${{ github.sha }}
 
             - name: Push the image
