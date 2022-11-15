@@ -1,0 +1,36 @@
+name: pushImage
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+    CONTAINER_REGISTRY: docker.io
+    CONTAINER_NAME: hack22image
+    DEPLOYMENT_MANIFEST_PATH: |
+        ./deploy.yml
+        ./secret.yml
+        ./cm.yaml
+jobs:
+    buildImage:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+              name: Checkout Code
+            
+            - name: Login to image repository
+              uses: docker/login-action@v2
+              with:
+                registry: ${{ env.CONTAINER_REGISTRY }}
+                username: ${{ secrets.DOCKER_USER }}
+                password: ${{ secrets.DOCKER_PASSWORD }}
+
+            - name: Build docker image
+              run: |
+                docker build . --file Dockerfile --tag ${{ env.CONTAINER_REGISTRY }}/${{ env.CONTAINER_NAME }}:${{ github.sha }}
+
+            - name: Push the image if scan is Successful
+              run: |
+                docker push ${{ env.CONTAINER_REGISTRY }}/${{ env.CONTAINER_NAME }}:${{ github.sha }}
