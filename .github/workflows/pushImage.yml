@@ -29,9 +29,8 @@ jobs:
 
             - name: Build docker image
               run: |
-                echo $GITHUB_RUN_NUMBER
-                docker build . --file Dockerfile --tag ${{ secrets.DOCKER_USER }}/${{ env.CONTAINER_NAME }}:${{ github.sha }}
+                docker build . --file Dockerfile --tag ${{ secrets.DOCKER_USER }}/${{ env.CONTAINER_NAME }}:$GITHUB_RUN_NUMBER
 
             - name: Push the image
               run: |
-                docker push ${{ secrets.DOCKER_USER }}/${{ env.CONTAINER_NAME }}:${{ github.sha }}
+                docker push ${{ secrets.DOCKER_USER }}/${{ env.CONTAINER_NAME }}:$GITHUB_RUN_NUMBER
