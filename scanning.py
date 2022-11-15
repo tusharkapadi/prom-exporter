@@ -10,24 +10,13 @@ from datetime import timedelta
 
 from sdcclient import SdScanningClient
 
-# secure_api_token = os.getenv('SECURE_API_TOKEN').replace('\n', '')
-# secure_url = os.getenv('SECURE_URL')
-# scheduled_run_minutes = int(os.getenv('SCHEDULED_RUN_MINUTES'))
-# prom_exp_url_port = int(os.getenv('PROM_EXP_URL_PORT'))
-# batch_limit = int(os.getenv('BATCH_LIMIT'))
-# customer_name = os.getenv('CUSTOMER_NAME')
-# query_features_list = os.getenv('QUERY_FEATURES_LIST')
-
-secure_api_token = "1ba7069e-00dc-49be-9650-36f82313276c"
-secure_api_token = "2d0bcef9-cc22-4f58-9902-b019d403aa14"   # expel
-
-secure_url = "https://secure.sysdig.com"
-secure_url = "https://us2.app.sysdig.com"
-scheduled_run_minutes = 100
-prom_exp_url_port = 8000
-batch_limit = 100
-customer_name = "Expel"
-query_features_list = "all"
+secure_api_token = os.getenv('SECURE_API_TOKEN').replace('\n', '')
+secure_url = os.getenv('SECURE_URL')
+scheduled_run_minutes = int(os.getenv('SCHEDULED_RUN_MINUTES'))
+prom_exp_url_port = int(os.getenv('PROM_EXP_URL_PORT'))
+batch_limit = int(os.getenv('BATCH_LIMIT'))
+customer_name = os.getenv('CUSTOMER_NAME')
+query_features_list = os.getenv('QUERY_FEATURES_LIST')
 
 # all - query all features
 # if you want to test out a specific product area directly:
