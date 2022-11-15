@@ -10,14 +10,13 @@ from datetime import timedelta
 
 from sdcclient import SdScanningClient
 
-# secure_api_token = os.getenv('SECURE_API_TOKEN').replace('\n', '')
-# secure_url = os.getenv('SECURE_URL')
-# scheduled_run_minutes = int(os.getenv('SCHEDULED_RUN_MINUTES'))
-# prom_exp_url_port = int(os.getenv('PROM_EXP_URL_PORT'))
-# batch_limit = int(os.getenv('BATCH_LIMIT'))
-# customer_name = os.getenv('CUSTOMER_NAME')
-# query_features_list = os.getenv('QUERY_FEATURES_LIST')
-
+secure_api_token = os.getenv('SECURE_API_TOKEN').replace('\n', '')
+secure_url = os.getenv('SECURE_URL')
+scheduled_run_minutes = int(os.getenv('SCHEDULED_RUN_MINUTES'))
+prom_exp_url_port = int(os.getenv('PROM_EXP_URL_PORT'))
+batch_limit = int(os.getenv('BATCH_LIMIT'))
+customer_name = os.getenv('CUSTOMER_NAME')
+query_features_list = os.getenv('QUERY_FEATURES_LIST')
 
 
 # all - query all features
@@ -30,7 +29,7 @@ test_iam = "iam"
 
 test_area = [test_scanning]
 if query_features_list == "all":
-    test_area = [test_scanning, test_scanning_v2, test_compliance, test_benchmark, test_iam]
+    test_area = [test_scanning, test_scanning_v2, test_compliance, test_benchmark]
 else:
     test_area = query_features_list
 
@@ -46,6 +45,7 @@ scanning_prom_exp_metrics = {}
 all_compliances = []
 all_benchmarks = []
 all_scanning_v2 = []
+images_runtime_exploit_hasfix_inuse = []
 total_requests = 0
 
 from sdcclient import SdMonitorClient
@@ -218,6 +218,51 @@ class SecureMetricsCollector(object):
                     'sysdig_secure_workload_type',
                     'sysdig_secure_customer_name'
                     ])
+
+        prom_metric_scanning_v2_images_exploit_fix_inuse_count = GaugeMetricFamily(
+            "sysdig_secure_images_scanned_v2_exploit_fix_inuse_count",
+            'critical vul using new scanning engine that has exploit, fix & inuse',
+            labels=['sysdig_secure_image_id',
+                    'sysdig_secure_image_reg_name',
+                    'sysdig_secure_image_repo_name',
+                    'sysdig_secure_image_pull_string',
+                    'sysdig_secure_image_status',
+                    'sysdig_secure_image_running',
+                    'sysdig_secure_image_name',
+                    'sysdig_secure_asset_type',
+                    'sysdig_secure_cluster_name',
+                    'sysdig_secure_namespace_name',
+                    'sysdig_secure_workload_name',
+                    'sysdig_secure_workload_type',
+                    'sysdig_secure_customer_name'
+                    ])
+
+        prom_metric_scanning_images_v2 = GaugeMetricFamily("sysdig_secure_images_scanned_v2",
+                                                        'All the images detected in your cluster with new scan engine.',
+                                                        labels=['sysdig_secure_image_scan_origin',
+                                                                'sysdig_secure_image_reg_name',
+                                                                'sysdig_secure_image_repo_name',
+                                                                'sysdig_secure_image_pull_string',
+                                                                'sysdig_secure_image_status',
+                                                                'sysdig_secure_image_running',
+                                                                'sysdig_secure_image_name',
+                                                                'sysdig_secure_asset_type',
+                                                                'sysdig_secure_cluster_name',
+                                                                'sysdig_secure_namespace_name',
+                                                                'sysdig_secure_workload_name',
+                                                                'sysdig_secure_workload_type',
+                                                                'sysdig_secure_node_name',
+                                                                'sysdig_secure_critical_vuln',
+                                                                'sysdig_secure_high_vuln',
+                                                                'sysdig_secure_medium_vuln',
+                                                                'sysdig_secure_low_vuln',
+                                                                'sysdig_secure_in_use_critical_vuln',
+                                                                'sysdig_secure_in_use_high_vuln',
+                                                                'sysdig_secure_in_use_medium_vuln',
+                                                                'sysdig_secure_in_use_low_vuln',
+                                                                'sysdig_secure_exploit_count',
+                                                                'sysdig_secure_customer_name'
+                                                                ])
 
         # Scanning - old
         prom_metric_scanning_images = GaugeMetricFamily("sysdig_secure_images_scanned",
@@ -440,6 +485,7 @@ class SecureMetricsCollector(object):
         global all_compliances
         global all_benchmarks
         global all_scanning_v2
+        global images_runtime_exploit_hasfix_inuse
         global customer_name
 
         next_run_date = last_run_date + timedelta(minutes=scheduled_run_minutes)
@@ -532,6 +578,25 @@ class SecureMetricsCollector(object):
                         scanning["exploitCount"]
                     )
 
+                    prom_metric_scanning_images_v2.add_metric(
+                        [scanning["origin"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
+                         scanning["policyStatus"], scanning["running"],  scanning["image_name"], scanning["asset_type"],
+                         scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
+                         scanning["workload_type"], scanning["node_name"], str(scanning["critical"]), str(scanning["high"]),
+                         str(scanning["medium"]), str(scanning["low"]), str(scanning["in_use_critical"]), str(scanning["in_use_high"]),
+                         str(scanning["in_use_medium"]), str(scanning["in_use_low"]), str(scanning["exploitCount"]), customer_name],
+                        len(all_scanning_v2)
+                    )
+
+                for scanning in images_runtime_exploit_hasfix_inuse:
+                    prom_metric_scanning_v2_images_exploit_fix_inuse_count.add_metric(
+                        [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
+                         scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
+                         scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
+                         scanning["workload_type"], customer_name],
+                        scanning["fix_exploitable_running"]
+                    )
+
                 yield prom_metric_scanning_v2_images_critical
                 yield prom_metric_scanning_v2_images_high
                 yield prom_metric_scanning_v2_images_medium
@@ -541,6 +606,8 @@ class SecureMetricsCollector(object):
                 yield prom_metric_scanning_v2_images_in_use_medium
                 yield prom_metric_scanning_v2_images_in_use_low
                 yield prom_metric_scanning_v2_images_exploit_count
+                yield prom_metric_scanning_images_v2
+                yield prom_metric_scanning_v2_images_exploit_fix_inuse_count
 
             if test_scanning in test_area:
                 print("Scanning v1 from memory - " + str(len(scanning_prom_exp_metrics)))
@@ -643,7 +710,7 @@ class SecureMetricsCollector(object):
         # scanning - new
         if test_scanning_v2 in test_area:
             try:
-                all_scanning_v2 = scanning_v2_prom_exporter()
+                all_scanning_v2, images_runtime_exploit_hasfix_inuse = scanning_v2_prom_exporter()
             except Exception as ex:
                 logging.error(ex)
                 return
@@ -726,6 +793,28 @@ class SecureMetricsCollector(object):
                     scanning["exploitCount"]
                 )
 
+                prom_metric_scanning_images_v2.add_metric(
+                    [scanning["origin"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
+                     scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
+                     scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
+                     scanning["workload_type"], scanning["node_name"], str(scanning["critical"]), str(scanning["high"]),
+                     str(scanning["medium"]), str(scanning["low"]), str(scanning["in_use_critical"]),
+                     str(scanning["in_use_high"]),
+                     str(scanning["in_use_medium"]), str(scanning["in_use_low"]), str(scanning["exploitCount"]),
+                     customer_name],
+                    len(all_scanning_v2)
+                )
+
+            for scanning in images_runtime_exploit_hasfix_inuse:
+                prom_metric_scanning_v2_images_exploit_fix_inuse_count.add_metric(
+                    [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
+                     scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
+                     scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
+                     scanning["workload_type"], customer_name],
+                    scanning["fix_exploitable_running"]
+                )
+
+
             yield prom_metric_scanning_v2_images_critical
             yield prom_metric_scanning_v2_images_high
             yield prom_metric_scanning_v2_images_medium
@@ -735,6 +824,8 @@ class SecureMetricsCollector(object):
             yield prom_metric_scanning_v2_images_in_use_medium
             yield prom_metric_scanning_v2_images_in_use_low
             yield prom_metric_scanning_v2_images_exploit_count
+            yield prom_metric_scanning_images_v2
+            yield prom_metric_scanning_v2_images_exploit_fix_inuse_count
 
             print("yielded scanning_v2 prom exporter")
 
@@ -899,10 +990,12 @@ def scanning_v2_prom_exporter():
 
         images_scanning_v2 = images_pipeline + images_runtime
 
+        images_runtime_exploit_hasfix_inuse = query_scanning_v2_image_details(images_runtime)
+
     except:
         raise
 
-    return images_scanning_v2
+    return images_scanning_v2, images_runtime_exploit_hasfix_inuse
 
 
 def scanning_prom_exporter():
@@ -960,11 +1053,9 @@ def scanning_prom_exporter():
     distro_list = list(distro_set)
 
 
-    temp_a = 0
+
     final_dict = {}
     for image in all_images:
-        print(temp_a)
-        temp_a = temp_a + 1
         for distro in distro_list:
             if image.get("distro") == distro:
                 for origin in origin_list:
@@ -1263,6 +1354,7 @@ def query_scanning_v2_pipeline_images(next_cursor):
 
             image_data_dict["exploitCount"] = x["exploitCount"]
 
+            image_data_dict["origin"] = "pipeline"
             image_data_list.append(image_data_dict.copy())
             image_data_dict.clear()
     else:
@@ -1314,6 +1406,7 @@ def query_scanning_v2_runtime_images(next_cursor):
         a = 0
         for x in all_images_res:
 
+            image_data_dict["resultId"] = x["resultId"]
             image_data_dict["imageId"] = ""
             image_data_dict["imagePullString"] = x["recordDetails"]["mainAssetName"]
             image_data_dict["policyStatus"] = x['policyEvaluationsResult'][:4]
@@ -1373,6 +1466,7 @@ def query_scanning_v2_runtime_images(next_cursor):
                 image_data_dict["workload_type"] = ""
 
             image_data_dict["running"] = "yes"
+            image_data_dict["origin"] = "runtime"
             image_data_dict["exploitCount"] = x["exploitCount"]
 
             image_data_list.append(image_data_dict.copy())
@@ -1384,6 +1478,32 @@ def query_scanning_v2_runtime_images(next_cursor):
         raise
 
     return image_data_list, next_cursor
+
+
+def query_scanning_v2_image_details(runtime_images):
+
+    auth_string = "Bearer " + secure_api_token
+    a = 0
+    for image in runtime_images:
+        url = secure_url + '/api/scanning/scanresults/v2/results/' + image["resultId"] + \
+        "/vulnPkgs?filter=vulnHasFix = true and vulnIsExploitable = true and vulnIsRunning = true"
+
+        try:
+            response = requests.get(url, headers={"Authorization": auth_string})
+        except Exception as ex:
+            logging.error("Received an exception while invoking the url: " + url)
+            logging.error(ex)
+            raise
+        if response.status_code == 200:
+            response_text = json.loads(response.text)
+            matched_total = response_text["page"]["matched"]
+            image["fix_exploitable_running"] = matched_total
+        else:
+            logging.error("Received an error trying to get the response from: " + url)
+            logging.error("Error message: " + response.text)
+            raise
+
+    return runtime_images
 
 
 def compliance_prom_exporter():
@@ -1660,9 +1780,6 @@ def query_iam_users_roles(next_cursor, kind):
             user_role_data_dict["customerName"] = customer_name
 
             risk_list = x["labels"]["risk"]
-
-            print(a)
-            a = a + 1
 
             user_role_data_dict["admin"] = "no"
             user_role_data_dict["inactive"] = "no"
