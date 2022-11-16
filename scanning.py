@@ -1860,7 +1860,8 @@ def query_scanning_v2_image_details(runtime_images):
 
         print(a)
         a = a + 1
-        time.sleep(0.5)
+        if a % 50 == 0:
+            time.sleep(1)
         try:
             response = requests.get(url, headers={"Authorization": auth_string})
         except Exception as ex:
