@@ -18,6 +18,7 @@ batch_limit = int(os.getenv('BATCH_LIMIT'))
 customer_name = os.getenv('CUSTOMER_NAME')
 query_features_list = os.getenv('QUERY_FEATURES_LIST')
 
+
 # all - query all features
 # if you want to test out a specific product area directly:
 test_scanning = "scanning_v1"
@@ -28,7 +29,7 @@ test_iam = "iam"
 
 test_area = [test_scanning]
 if query_features_list == "all":
-    test_area = [test_scanning, test_scanning_v2, test_compliance, test_benchmark]
+    test_area = [test_scanning, test_scanning_v2, test_compliance, test_benchmark, test_iam]
 else:
     test_area = query_features_list
 
@@ -44,6 +45,9 @@ scanning_prom_exp_metrics = {}
 all_compliances = []
 all_benchmarks = []
 all_scanning_v2 = []
+iam_policies = []
+iam_users = []
+iam_roles = []
 images_runtime_exploit_hasfix_inuse = []
 total_requests = 0
 
@@ -424,6 +428,60 @@ class SecureMetricsCollector(object):
                                                              'sysdig_secure_customer_name'
                                                              ])
 
+        prom_metric_iam_policy_perms_given_total = GaugeMetricFamily("sysdig_secure_iam_policy_perms_given_total",
+                                                   'IAM policies permissions given total',
+                                                   labels=['sysdig_secure_iam_policy_name',
+                                                           'sysdig_secure_iam_actors_total',
+                                                           'sysdig_secure_iam_risk_category',
+                                                           'sysdig_secure_iam_policy_type',
+                                                           'sysdig_secure_customer_name'
+                                                           ])
+
+        prom_metric_iam_policy_perms_unused_total = GaugeMetricFamily("sysdig_secure_iam_policy_perms_unused_total",
+                                                                     'IAM policies permissions unused total',
+                                                                     labels=['sysdig_secure_iam_policy_name',
+                                                                             'sysdig_secure_iam_actors_total',
+                                                                             'sysdig_secure_iam_risk_category',
+                                                                             'sysdig_secure_iam_policy_type',
+                                                                             'sysdig_secure_customer_name'
+                                                                             ])
+
+        prom_metric_iam_policy_risky_perms_total = GaugeMetricFamily("sysdig_secure_iam_policy_risky_perms_total",
+                                                                     'IAM policies risky permissions total',
+                                                                     labels=['sysdig_secure_iam_policy_name',
+                                                                             'sysdig_secure_iam_actors_total',
+                                                                             'sysdig_secure_iam_risk_category',
+                                                                             'sysdig_secure_iam_policy_type',
+                                                                             'sysdig_secure_customer_name'
+                                                                             ])
+
+        prom_metric_iam_policy_risk_score = GaugeMetricFamily("sysdig_secure_iam_policy_risk_score",
+                                                                     'IAM policies risk score',
+                                                                     labels=['sysdig_secure_iam_policy_name',
+                                                                             'sysdig_secure_iam_actors_total',
+                                                                             'sysdig_secure_iam_risk_category',
+                                                                             'sysdig_secure_iam_policy_type',
+                                                                             'sysdig_secure_customer_name'
+                                                                             ])
+
+        prom_metric_iam_policy_excessive_risky_perms_total = GaugeMetricFamily("sysdig_secure_iam_policy_excessive_risky_perms_total",
+                                                                     'IAM policies excessive risky permissions total',
+                                                                     labels=['sysdig_secure_iam_policy_name',
+                                                                             'sysdig_secure_iam_actors_total',
+                                                                             'sysdig_secure_iam_risk_category',
+                                                                             'sysdig_secure_iam_policy_type',
+                                                                             'sysdig_secure_customer_name'
+                                                                             ])
+
+        prom_metric_iam_policy_excessive_risk_score = GaugeMetricFamily("sysdig_secure_iam_policy_excessive_risk_score",
+                                                              'IAM policies excessive risk score',
+                                                              labels=['sysdig_secure_iam_policy_name',
+                                                                      'sysdig_secure_iam_actors_total',
+                                                                      'sysdig_secure_iam_risk_category',
+                                                                      'sysdig_secure_iam_policy_type',
+                                                                      'sysdig_secure_customer_name'
+                                                                      ])
+
         prom_metric_iam_user = GaugeMetricFamily("sysdig_secure_iam_user",
                                                      'IAM users',
                                                      labels=['sysdig_secure_iam_user_name',
@@ -446,6 +504,37 @@ class SecureMetricsCollector(object):
                                                              'sysdig_secure_iam_user_risk_multiple_keys',
                                                              'sysdig_secure_customer_name'
                                                              ])
+
+        prom_metric_iam_user_permissions_given_total = GaugeMetricFamily("sysdig_secure_iam_user_permissions_given_total",
+                                                 'IAM users permissions given',
+                                                 labels=['sysdig_secure_iam_user_name',
+                                                         'sysdig_secure_iam_user_policies_total',
+                                                         'sysdig_secure_iam_risk_category',
+                                                         'sysdig_secure_iam_excessive_risk_category',
+                                                         'sysdig_secure_iam_user_risk_admin',
+                                                         'sysdig_secure_iam_user_risk_inactive',
+                                                         'sysdig_secure_iam_user_risk_no_mfa',
+                                                         'sysdig_secure_iam_user_risk_key1_not_rotated',
+                                                         'sysdig_secure_iam_user_risk_key2_not_rotated',
+                                                         'sysdig_secure_iam_user_risk_multiple_keys',
+                                                         'sysdig_secure_customer_name'
+                                                         ])
+
+        prom_metric_iam_user_permissions_unused_total = GaugeMetricFamily(
+            "sysdig_secure_iam_user_permissions_unused_total",
+            'IAM users permissions unused',
+            labels=['sysdig_secure_iam_user_name',
+                    'sysdig_secure_iam_user_policies_total',
+                    'sysdig_secure_iam_risk_category',
+                    'sysdig_secure_iam_excessive_risk_category',
+                    'sysdig_secure_iam_user_risk_admin',
+                    'sysdig_secure_iam_user_risk_inactive',
+                    'sysdig_secure_iam_user_risk_no_mfa',
+                    'sysdig_secure_iam_user_risk_key1_not_rotated',
+                    'sysdig_secure_iam_user_risk_key2_not_rotated',
+                    'sysdig_secure_iam_user_risk_multiple_keys',
+                    'sysdig_secure_customer_name'
+                    ])
 
         prom_metric_iam_role = GaugeMetricFamily("sysdig_secure_iam_role",
                                                  'IAM roles',
@@ -470,6 +559,36 @@ class SecureMetricsCollector(object):
                                                          'sysdig_secure_customer_name'
                                                          ])
 
+        prom_metric_iam_role_permissions_given_total = GaugeMetricFamily("sysdig_secure_iam_role_permissions_given_total",
+                                                 'IAM roles permissions total',
+                                                 labels=['sysdig_secure_iam_role_name',
+                                                         'sysdig_secure_iam_role_policies_total',
+                                                         'sysdig_secure_iam_risk_category',
+                                                         'sysdig_secure_iam_excessive_risk_category',
+                                                         'sysdig_secure_iam_role_risk_admin',
+                                                         'sysdig_secure_iam_role_risk_inactive',
+                                                         'sysdig_secure_iam_role_risk_no_mfa',
+                                                         'sysdig_secure_iam_role_risk_key1_not_rotated',
+                                                         'sysdig_secure_iam_role_risk_key2_not_rotated',
+                                                         'sysdig_secure_iam_role_risk_multiple_keys',
+                                                         'sysdig_secure_customer_name'
+                                                         ])
+
+        prom_metric_iam_role_permissions_unused_total = GaugeMetricFamily(
+            "sysdig_secure_iam_role_permissions_unused_total",
+            'IAM roles permissions unused',
+            labels=['sysdig_secure_iam_role_name',
+                    'sysdig_secure_iam_role_policies_total',
+                    'sysdig_secure_iam_risk_category',
+                    'sysdig_secure_iam_excessive_risk_category',
+                    'sysdig_secure_iam_role_risk_admin',
+                    'sysdig_secure_iam_role_risk_inactive',
+                    'sysdig_secure_iam_role_risk_no_mfa',
+                    'sysdig_secure_iam_role_risk_key1_not_rotated',
+                    'sysdig_secure_iam_role_risk_key2_not_rotated',
+                    'sysdig_secure_iam_role_risk_multiple_keys',
+                    'sysdig_secure_customer_name'
+                    ])
 
         curr_date = datetime.now()
         curr_date_str = curr_date.strftime("%d/%m/%Y %H:%M")
@@ -484,6 +603,9 @@ class SecureMetricsCollector(object):
         global all_compliances
         global all_benchmarks
         global all_scanning_v2
+        global iam_policies
+        global iam_users
+        global iam_roles
         global images_runtime_exploit_hasfix_inuse
         global customer_name
 
@@ -698,7 +820,146 @@ class SecureMetricsCollector(object):
                 yield prom_metric_benchmark_control_fail
                 yield prom_metric_benchmark_control_warn
 
+            if test_iam in test_area:
+                print("iam policies from memory - " + str(len(iam_policies)))
+                for policy in iam_policies:
+                    prom_metric_iam_policy.add_metric(
+                        [policy["policyName"], str(policy["actorsTotal"]), str(policy["numPermissionsGiven"]), str(policy["numPermissionsUnused"]),
+                         policy["riskCategory"], str(policy["riskyPermissions"]), str(policy["riskScore"]), policy["policyType"], policy["excessiveRiskCategory"],
+                         str(policy["excessiveRiskyPermissions"]), str(policy["excessiveRiskScore"]), policy["customerName"]],
+                        len(iam_policies)
+                    )
+
+                    prom_metric_iam_policy_perms_given_total.add_metric(
+                        [policy["policyName"], str(policy["actorsTotal"]),
+                         policy["riskCategory"], policy["policyType"],
+                         policy["customerName"]],
+                        policy["numPermissionsGiven"]
+                    )
+
+                    prom_metric_iam_policy_perms_unused_total.add_metric(
+                        [policy["policyName"], str(policy["actorsTotal"]),
+                         policy["riskCategory"], policy["policyType"],
+                         policy["customerName"]],
+                        policy["numPermissionsUnused"]
+                    )
+
+                    prom_metric_iam_policy_risky_perms_total.add_metric(
+                        [policy["policyName"], str(policy["actorsTotal"]),
+                         policy["riskCategory"], policy["policyType"],
+                         policy["customerName"]],
+                        policy["riskyPermissions"]
+                    )
+
+                    prom_metric_iam_policy_risk_score.add_metric(
+                        [policy["policyName"], str(policy["actorsTotal"]),
+                         policy["riskCategory"], policy["policyType"],
+                         policy["customerName"]],
+                        policy["riskScore"]
+                    )
+
+                    prom_metric_iam_policy_excessive_risky_perms_total.add_metric(
+                        [policy["policyName"], str(policy["actorsTotal"]),
+                         policy["riskCategory"], policy["policyType"],
+                         policy["customerName"]],
+                        policy["excessiveRiskyPermissions"]
+                    )
+
+                    prom_metric_iam_policy_excessive_risk_score.add_metric(
+                        [policy["policyName"], str(policy["actorsTotal"]),
+                         policy["riskCategory"], policy["policyType"],
+                         policy["customerName"]],
+                        policy["excessiveRiskScore"]
+                    )
+
+                print("iam users from memory - " + str(len(iam_users)))
+                for user in iam_users:
+                    prom_metric_iam_user.add_metric(
+                        [user["actorName"], str(user["policiesTotal"]), str(user["numPermissionsGiven"]),
+                         str(user["effectivePermissionsCount"]), str(user["numPermissionsUnused"]),
+                         str(user["numPermissionsUsed"]),
+                         user["riskCategory"], str(user["riskyPermissions"]), str(user["riskScore"]),
+                         user["excessiveRiskCategory"],
+                         str(user["excessiveRiskyPermissions"]), str(user["excessiveRiskScore"]),
+                         user["admin"], user["inactive"], user["no_mfa"], user["key1_not_rotated"],
+                         user["key2_not_rotated"], user["multiple_keys"], user["customerName"]],
+                        len(iam_users)
+                    )
+
+                    prom_metric_iam_user_permissions_given_total.add_metric(
+                        [user["actorName"], str(user["policiesTotal"]), user["riskCategory"],
+                         user["excessiveRiskCategory"],
+                         user["admin"], user["inactive"], user["no_mfa"], user["key1_not_rotated"],
+                         user["key2_not_rotated"], user["multiple_keys"], user["customerName"]],
+                        user["numPermissionsGiven"]
+                    )
+
+                    prom_metric_iam_user_permissions_unused_total.add_metric(
+                        [user["actorName"], str(user["policiesTotal"]), user["riskCategory"],
+                         user["excessiveRiskCategory"],
+                         user["admin"], user["inactive"], user["no_mfa"], user["key1_not_rotated"],
+                         user["key2_not_rotated"], user["multiple_keys"], user["customerName"]],
+                        user["numPermissionsUnused"]
+                    )
+
+                print("iam roles from memory - " + str(len(iam_roles)))
+                for role in iam_roles:
+                    prom_metric_iam_role.add_metric(
+                        [role["actorName"], str(role["policiesTotal"]), str(role["numPermissionsGiven"]),
+                         str(role["effectivePermissionsCount"]), str(role["numPermissionsUnused"]),
+                         str(role["numPermissionsUsed"]),
+                         role["riskCategory"], str(role["riskyPermissions"]), str(role["riskScore"]),
+                         role["excessiveRiskCategory"],
+                         str(role["excessiveRiskyPermissions"]), str(role["excessiveRiskScore"]),
+                         role["admin"], role["inactive"], role["no_mfa"], role["key1_not_rotated"],
+                         role["key2_not_rotated"], role["multiple_keys"], role["customerName"]],
+                        len(iam_roles)
+                    )
+
+                    prom_metric_iam_role_permissions_given_total.add_metric(
+                        [role["actorName"], str(role["policiesTotal"]), role["riskCategory"],
+                         role["excessiveRiskCategory"],
+                         role["admin"], role["inactive"], role["no_mfa"], role["key1_not_rotated"],
+                         role["key2_not_rotated"], role["multiple_keys"], role["customerName"]],
+                        role["numPermissionsGiven"]
+                    )
+
+                    prom_metric_iam_role_permissions_unused_total.add_metric(
+                        [role["actorName"], str(role["policiesTotal"]), role["riskCategory"],
+                         role["excessiveRiskCategory"],
+                         role["admin"], role["inactive"], role["no_mfa"], role["key1_not_rotated"],
+                         role["key2_not_rotated"], role["multiple_keys"], role["customerName"]],
+                        role["numPermissionsUnused"]
+                    )
+
+                yield prom_metric_scanning_v2_images_critical
+                yield prom_metric_iam_policy_perms_given_total
+                yield prom_metric_iam_policy_perms_unused_total
+                yield prom_metric_iam_policy_risky_perms_total
+                yield prom_metric_iam_policy_risk_score
+                yield prom_metric_iam_policy_excessive_risky_perms_total
+                yield prom_metric_iam_policy_excessive_risk_score
+
+                yield prom_metric_iam_user
+                yield prom_metric_iam_user_permissions_given_total
+                yield prom_metric_iam_user_permissions_unused_total
+
+                yield prom_metric_iam_role
+                yield prom_metric_iam_role_permissions_given_total
+                yield prom_metric_iam_role_permissions_unused_total
+
+                print("yielded iam prom exporter")
+
             return
+
+
+
+        # **********************************************************************
+
+        # Using API
+        # ***********************************************************************
+
+
 
         print("Querying metrics from Sysdig Secure Backend using APIs....")
         # ------------------------------------------------------------------------------
@@ -946,7 +1207,7 @@ class SecureMetricsCollector(object):
             yield prom_metric_benchmark_control_fail
             yield prom_metric_benchmark_control_warn
 
-        first_time_running = False
+
 
 
         # iam
@@ -966,18 +1227,128 @@ class SecureMetricsCollector(object):
 
             for policy in iam_policies:
                 prom_metric_iam_policy.add_metric(
-                    [policy["policyName"], policy["actorsTotal"], policy["numPermissionsGiven"], policy["numPermissionsUnused"],
-                     policy["riskCategory"], policy["riskyPermissions"], policy["riskScore"], policy["policyType"], policy["excessiveRiskCategory"],
-                     policy["excessiveRiskyPermissions"], policy["excessiveRiskScore"], policy["customerName"]],
-                    scanning["critical"]
+                    [policy["policyName"], str(policy["actorsTotal"]), str(policy["numPermissionsGiven"]),
+                     str(policy["numPermissionsUnused"]),
+                     policy["riskCategory"], str(policy["riskyPermissions"]), str(policy["riskScore"]),
+                     policy["policyType"], policy["excessiveRiskCategory"],
+                     str(policy["excessiveRiskyPermissions"]), str(policy["excessiveRiskScore"]),
+                     policy["customerName"]],
+                    len(iam_policies)
+                )
+
+                prom_metric_iam_policy_perms_given_total.add_metric(
+                    [policy["policyName"], str(policy["actorsTotal"]),
+                     policy["riskCategory"], policy["policyType"],
+                     policy["customerName"]],
+                    policy["numPermissionsGiven"]
+                )
+
+                prom_metric_iam_policy_perms_unused_total.add_metric(
+                    [policy["policyName"], str(policy["actorsTotal"]),
+                     policy["riskCategory"], policy["policyType"],
+                     policy["customerName"]],
+                    policy["numPermissionsUnused"]
+                )
+
+                prom_metric_iam_policy_risky_perms_total.add_metric(
+                    [policy["policyName"], str(policy["actorsTotal"]),
+                     policy["riskCategory"], policy["policyType"],
+                     policy["customerName"]],
+                    policy["riskyPermissions"]
+                )
+
+                prom_metric_iam_policy_risk_score.add_metric(
+                    [policy["policyName"], str(policy["actorsTotal"]),
+                     policy["riskCategory"], policy["policyType"],
+                     policy["customerName"]],
+                    policy["riskScore"]
+                )
+
+                prom_metric_iam_policy_excessive_risky_perms_total.add_metric(
+                    [policy["policyName"], str(policy["actorsTotal"]),
+                     policy["riskCategory"], policy["policyType"],
+                     policy["customerName"]],
+                    policy["excessiveRiskyPermissions"]
+                )
+
+                prom_metric_iam_policy_excessive_risk_score.add_metric(
+                    [policy["policyName"], str(policy["actorsTotal"]),
+                     policy["riskCategory"], policy["policyType"],
+                     policy["customerName"]],
+                    policy["excessiveRiskScore"]
+                )
+
+            for user in iam_users:
+                prom_metric_iam_user.add_metric(
+                    [user["actorName"], str(user["policiesTotal"]), str(user["numPermissionsGiven"]),
+                     str(user["effectivePermissionsCount"]), str(user["numPermissionsUnused"]), str(user["numPermissionsUsed"]),
+                     user["riskCategory"], str(user["riskyPermissions"]), str(user["riskScore"]),
+                     user["excessiveRiskCategory"],
+                     str(user["excessiveRiskyPermissions"]), str(user["excessiveRiskScore"]),
+                     user["admin"], user["inactive"], user["no_mfa"], user["key1_not_rotated"],
+                     user["key2_not_rotated"], user["multiple_keys"], user["customerName"]],
+                    len(iam_users)
+                )
+
+                prom_metric_iam_user_permissions_given_total.add_metric(
+                    [user["actorName"], str(user["policiesTotal"]),  user["riskCategory"], user["excessiveRiskCategory"],
+                     user["admin"], user["inactive"], user["no_mfa"], user["key1_not_rotated"],
+                     user["key2_not_rotated"], user["multiple_keys"], user["customerName"]],
+                    user["numPermissionsGiven"]
+                )
+
+                prom_metric_iam_user_permissions_unused_total.add_metric(
+                    [user["actorName"], str(user["policiesTotal"]), user["riskCategory"], user["excessiveRiskCategory"],
+                     user["admin"], user["inactive"], user["no_mfa"], user["key1_not_rotated"],
+                     user["key2_not_rotated"], user["multiple_keys"], user["customerName"]],
+                    user["numPermissionsUnused"]
+                )
+
+            for role in iam_roles:
+                prom_metric_iam_role.add_metric(
+                    [role["actorName"], str(role["policiesTotal"]), str(role["numPermissionsGiven"]),
+                     str(role["effectivePermissionsCount"]), str(role["numPermissionsUnused"]), str(role["numPermissionsUsed"]),
+                     role["riskCategory"], str(role["riskyPermissions"]), str(role["riskScore"]),
+                     role["excessiveRiskCategory"],
+                     str(role["excessiveRiskyPermissions"]), str(role["excessiveRiskScore"]),
+                     role["admin"], role["inactive"], role["no_mfa"], role["key1_not_rotated"],
+                     role["key2_not_rotated"], role["multiple_keys"], role["customerName"]],
+                    len(iam_roles)
+                )
+
+                prom_metric_iam_role_permissions_given_total.add_metric(
+                    [role["actorName"], str(role["policiesTotal"]),  role["riskCategory"], role["excessiveRiskCategory"],
+                     role["admin"], role["inactive"], role["no_mfa"], role["key1_not_rotated"],
+                     role["key2_not_rotated"], role["multiple_keys"], role["customerName"]],
+                    role["numPermissionsGiven"]
+                )
+
+                prom_metric_iam_role_permissions_unused_total.add_metric(
+                    [role["actorName"], str(role["policiesTotal"]), role["riskCategory"], role["excessiveRiskCategory"],
+                     role["admin"], role["inactive"], role["no_mfa"], role["key1_not_rotated"],
+                     role["key2_not_rotated"], role["multiple_keys"], role["customerName"]],
+                    role["numPermissionsUnused"]
                 )
 
             yield prom_metric_scanning_v2_images_critical
+            yield prom_metric_iam_policy_perms_given_total
+            yield prom_metric_iam_policy_perms_unused_total
+            yield prom_metric_iam_policy_risky_perms_total
+            yield prom_metric_iam_policy_risk_score
+            yield prom_metric_iam_policy_excessive_risky_perms_total
+            yield prom_metric_iam_policy_excessive_risk_score
 
-            print("yielded scanning_v2 prom exporter")
+            yield prom_metric_iam_user
+            yield prom_metric_iam_user_permissions_given_total
+            yield prom_metric_iam_user_permissions_unused_total
 
+            yield prom_metric_iam_role
+            yield prom_metric_iam_role_permissions_given_total
+            yield prom_metric_iam_role_permissions_unused_total
 
+            print("yielded iam prom exporter")
 
+            first_time_running = False
 
 def scanning_v2_prom_exporter():
     try:
@@ -1489,7 +1860,7 @@ def query_scanning_v2_image_details(runtime_images):
 
         print(a)
         a = a + 1
-        time.sleep(2)
+        time.sleep(1)
         try:
             response = requests.get(url, headers={"Authorization": auth_string})
         except Exception as ex:
@@ -1700,6 +2071,7 @@ def query_iam_policies(next_cursor):
 
         for x in all_policies:
             policy_data_dict["policyName"] = x["policyName"]
+            policy_data_dict["policyType"] = x["policyType"]
             policy_data_dict["actorsTotal"] = len(x['actors'])
             policy_data_dict["numPermissionsGiven"] = x["numPermissionsGiven"]
             policy_data_dict["numPermissionsUnused"] = x["numPermissionsUnused"]
