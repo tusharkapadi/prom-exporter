@@ -933,7 +933,7 @@ class SecureMetricsCollector(object):
                         role["numPermissionsUnused"]
                     )
 
-                yield prom_metric_scanning_v2_images_critical
+                yield prom_metric_iam_policy
                 yield prom_metric_iam_policy_perms_given_total
                 yield prom_metric_iam_policy_perms_unused_total
                 yield prom_metric_iam_policy_risky_perms_total
@@ -1334,7 +1334,7 @@ class SecureMetricsCollector(object):
                     role["numPermissionsUnused"]
                 )
 
-            yield prom_metric_scanning_v2_images_critical
+            yield prom_metric_iam_policy
             yield prom_metric_iam_policy_perms_given_total
             yield prom_metric_iam_policy_perms_unused_total
             yield prom_metric_iam_policy_risky_perms_total
