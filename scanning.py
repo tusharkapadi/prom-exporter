@@ -1871,18 +1871,27 @@ def query_scanning_v2_image_details(runtime_images):
         url = secure_url + '/api/scanning/scanresults/v2/results/' + image["resultId"] + \
               "/vulnPkgs?filter=vulnHasFix = true and vulnIsExploitable = true and vulnIsRunning = true"
 
+        re_run = False
         print(a)
         a = a + 1
         if a % 20 == 0:
-            print("sleeping for 3 seconds...")
-            time.sleep(3)
-        try:
-            response = requests.get(url, headers={"Authorization": auth_string})
-        except Exception as ex:
-            logging.error("Received an exception while invoking the url: " + url)
-            logging.error(ex)
-            print(response.headers)
-            raise
+            print("sleeping for 5 seconds...")
+            time.sleep(5)
+        while True:
+            try:
+                response = requests.get(url, headers={"Authorization": auth_string})
+            except Exception as ex:
+                logging.error("Received an exception while invoking the url: " + url)
+                logging.error(ex)
+                if "Rate limit exceeded" in ex:
+                    print(response.headers)
+                    print("Got rate limit exceeded error message. Sleeping for 5 mins and retrying.")
+                    time.sleep(300)
+                    print("retrying...")
+                    continue
+                else:
+                    print(response.headers)
+                    raise
         if response.status_code == 200:
             response_text = json.loads(response.text)
             matched_total = response_text["page"]["matched"]
