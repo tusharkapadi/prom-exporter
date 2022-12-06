@@ -10,14 +10,24 @@ from datetime import timedelta
 
 from sdcclient import SdScanningClient
 
-secure_api_token = os.getenv('SECURE_API_TOKEN').replace('\n', '')
-secure_url = os.getenv('SECURE_URL')
-scheduled_run_minutes = int(os.getenv('SCHEDULED_RUN_MINUTES'))
-prom_exp_url_port = int(os.getenv('PROM_EXP_URL_PORT'))
-batch_limit = int(os.getenv('BATCH_LIMIT'))
-customer_name = os.getenv('CUSTOMER_NAME')
-query_features_list = os.getenv('QUERY_FEATURES_LIST')
+# secure_api_token = os.getenv('SECURE_API_TOKEN').replace('\n', '')
+# secure_url = os.getenv('SECURE_URL')
+# scheduled_run_minutes = int(os.getenv('SCHEDULED_RUN_MINUTES'))
+# prom_exp_url_port = int(os.getenv('PROM_EXP_URL_PORT'))
+# batch_limit = int(os.getenv('BATCH_LIMIT'))
+# customer_name = os.getenv('CUSTOMER_NAME')
+# query_features_list = os.getenv('QUERY_FEATURES_LIST')
 
+
+secure_api_token = "1ba7069e-00dc-49be-9650-36f82313276c"
+secure_api_token = "effc8432-1161-4919-bcec-7fa74ea931e7"  # concur non prod
+secure_url = "https://secure.sysdig.com"
+# secure_url = "https://us2.app.sysdig.com"
+scheduled_run_minutes = 100
+prom_exp_url_port = 8000
+batch_limit = 100
+customer_name = "Concur-non-prod"
+query_features_list = "all"
 
 # all - query all features
 # if you want to test out a specific product area directly:
@@ -50,8 +60,6 @@ iam_users = []
 iam_roles = []
 images_runtime_exploit_hasfix_inuse = []
 total_requests = 0
-
-
 
 from sdcclient import SdMonitorClient
 
@@ -242,31 +250,31 @@ class SecureMetricsCollector(object):
                     ])
 
         prom_metric_scanning_images_v2 = GaugeMetricFamily("sysdig_secure_images_scanned_v2",
-                                                        'All the images detected in your cluster with new scan engine.',
-                                                        labels=['sysdig_secure_image_scan_origin',
-                                                                'sysdig_secure_image_reg_name',
-                                                                'sysdig_secure_image_repo_name',
-                                                                'sysdig_secure_image_pull_string',
-                                                                'sysdig_secure_image_status',
-                                                                'sysdig_secure_image_running',
-                                                                'sysdig_secure_image_name',
-                                                                'sysdig_secure_asset_type',
-                                                                'sysdig_secure_cluster_name',
-                                                                'sysdig_secure_namespace_name',
-                                                                'sysdig_secure_workload_name',
-                                                                'sysdig_secure_workload_type',
-                                                                'sysdig_secure_node_name',
-                                                                'sysdig_secure_critical_vuln',
-                                                                'sysdig_secure_high_vuln',
-                                                                'sysdig_secure_medium_vuln',
-                                                                'sysdig_secure_low_vuln',
-                                                                'sysdig_secure_in_use_critical_vuln',
-                                                                'sysdig_secure_in_use_high_vuln',
-                                                                'sysdig_secure_in_use_medium_vuln',
-                                                                'sysdig_secure_in_use_low_vuln',
-                                                                'sysdig_secure_exploit_count',
-                                                                'sysdig_secure_customer_name'
-                                                                ])
+                                                           'All the images detected in your cluster with new scan engine.',
+                                                           labels=['sysdig_secure_image_scan_origin',
+                                                                   'sysdig_secure_image_reg_name',
+                                                                   'sysdig_secure_image_repo_name',
+                                                                   'sysdig_secure_image_pull_string',
+                                                                   'sysdig_secure_image_status',
+                                                                   'sysdig_secure_image_running',
+                                                                   'sysdig_secure_image_name',
+                                                                   'sysdig_secure_asset_type',
+                                                                   'sysdig_secure_cluster_name',
+                                                                   'sysdig_secure_namespace_name',
+                                                                   'sysdig_secure_workload_name',
+                                                                   'sysdig_secure_workload_type',
+                                                                   'sysdig_secure_node_name',
+                                                                   'sysdig_secure_critical_vuln',
+                                                                   'sysdig_secure_high_vuln',
+                                                                   'sysdig_secure_medium_vuln',
+                                                                   'sysdig_secure_low_vuln',
+                                                                   'sysdig_secure_in_use_critical_vuln',
+                                                                   'sysdig_secure_in_use_high_vuln',
+                                                                   'sysdig_secure_in_use_medium_vuln',
+                                                                   'sysdig_secure_in_use_low_vuln',
+                                                                   'sysdig_secure_exploit_count',
+                                                                   'sysdig_secure_customer_name'
+                                                                   ])
 
         # Scanning - old
         prom_metric_scanning_images = GaugeMetricFamily("sysdig_secure_images_scanned",
@@ -414,38 +422,38 @@ class SecureMetricsCollector(object):
 
         # iam
         prom_metric_iam_policy = GaugeMetricFamily("sysdig_secure_iam_policy",
-                                                     'IAM policies',
-                                                     labels=['sysdig_secure_iam_policy_name',
-                                                             'sysdig_secure_iam_actors_total',
-                                                             'sysdig_secure_iam_permissions_given_total',
-                                                             'sysdig_secure_iam_permissions_unused_total',
-                                                             'sysdig_secure_iam_risk_category',
-                                                             'sysdig_secure_iam_risky_permissions_total',
-                                                             'sysdig_secure_iam_risk_score',
-                                                             'sysdig_secure_iam_policy_type',
-                                                             'sysdig_secure_iam_excessive_risk_category',
-                                                             'sysdig_secure_iam_execssive_risky_permissions_total',
-                                                             'sysdig_secure_iam_excessive_risk_score',
-                                                             'sysdig_secure_customer_name'
-                                                             ])
-
-        prom_metric_iam_policy_perms_given_total = GaugeMetricFamily("sysdig_secure_iam_policy_perms_given_total",
-                                                   'IAM policies permissions given total',
+                                                   'IAM policies',
                                                    labels=['sysdig_secure_iam_policy_name',
                                                            'sysdig_secure_iam_actors_total',
+                                                           'sysdig_secure_iam_permissions_given_total',
+                                                           'sysdig_secure_iam_permissions_unused_total',
                                                            'sysdig_secure_iam_risk_category',
+                                                           'sysdig_secure_iam_risky_permissions_total',
+                                                           'sysdig_secure_iam_risk_score',
                                                            'sysdig_secure_iam_policy_type',
+                                                           'sysdig_secure_iam_excessive_risk_category',
+                                                           'sysdig_secure_iam_execssive_risky_permissions_total',
+                                                           'sysdig_secure_iam_excessive_risk_score',
                                                            'sysdig_secure_customer_name'
                                                            ])
 
-        prom_metric_iam_policy_perms_unused_total = GaugeMetricFamily("sysdig_secure_iam_policy_perms_unused_total",
-                                                                     'IAM policies permissions unused total',
+        prom_metric_iam_policy_perms_given_total = GaugeMetricFamily("sysdig_secure_iam_policy_perms_given_total",
+                                                                     'IAM policies permissions given total',
                                                                      labels=['sysdig_secure_iam_policy_name',
                                                                              'sysdig_secure_iam_actors_total',
                                                                              'sysdig_secure_iam_risk_category',
                                                                              'sysdig_secure_iam_policy_type',
                                                                              'sysdig_secure_customer_name'
                                                                              ])
+
+        prom_metric_iam_policy_perms_unused_total = GaugeMetricFamily("sysdig_secure_iam_policy_perms_unused_total",
+                                                                      'IAM policies permissions unused total',
+                                                                      labels=['sysdig_secure_iam_policy_name',
+                                                                              'sysdig_secure_iam_actors_total',
+                                                                              'sysdig_secure_iam_risk_category',
+                                                                              'sysdig_secure_iam_policy_type',
+                                                                              'sysdig_secure_customer_name'
+                                                                              ])
 
         prom_metric_iam_policy_risky_perms_total = GaugeMetricFamily("sysdig_secure_iam_policy_risky_perms_total",
                                                                      'IAM policies risky permissions total',
@@ -457,25 +465,7 @@ class SecureMetricsCollector(object):
                                                                              ])
 
         prom_metric_iam_policy_risk_score = GaugeMetricFamily("sysdig_secure_iam_policy_risk_score",
-                                                                     'IAM policies risk score',
-                                                                     labels=['sysdig_secure_iam_policy_name',
-                                                                             'sysdig_secure_iam_actors_total',
-                                                                             'sysdig_secure_iam_risk_category',
-                                                                             'sysdig_secure_iam_policy_type',
-                                                                             'sysdig_secure_customer_name'
-                                                                             ])
-
-        prom_metric_iam_policy_excessive_risky_perms_total = GaugeMetricFamily("sysdig_secure_iam_policy_excessive_risky_perms_total",
-                                                                     'IAM policies excessive risky permissions total',
-                                                                     labels=['sysdig_secure_iam_policy_name',
-                                                                             'sysdig_secure_iam_actors_total',
-                                                                             'sysdig_secure_iam_risk_category',
-                                                                             'sysdig_secure_iam_policy_type',
-                                                                             'sysdig_secure_customer_name'
-                                                                             ])
-
-        prom_metric_iam_policy_excessive_risk_score = GaugeMetricFamily("sysdig_secure_iam_policy_excessive_risk_score",
-                                                              'IAM policies excessive risk score',
+                                                              'IAM policies risk score',
                                                               labels=['sysdig_secure_iam_policy_name',
                                                                       'sysdig_secure_iam_actors_total',
                                                                       'sysdig_secure_iam_risk_category',
@@ -483,35 +473,39 @@ class SecureMetricsCollector(object):
                                                                       'sysdig_secure_customer_name'
                                                                       ])
 
-        prom_metric_iam_user = GaugeMetricFamily("sysdig_secure_iam_user",
-                                                     'IAM users',
-                                                     labels=['sysdig_secure_iam_user_name',
-                                                             'sysdig_secure_iam_user_policies_total',
-                                                             'sysdig_secure_iam_permissions_given_total',
-                                                             'sysdig_secure_iam_permissions_effective_total',
-                                                             'sysdig_secure_iam_permissions_unused_total',
-                                                             'sysdig_secure_iam_permissions_used_total',
-                                                             'sysdig_secure_iam_risk_category',
-                                                             'sysdig_secure_iam_risky_permissions_total',
-                                                             'sysdig_secure_iam_risk_score',
-                                                             'sysdig_secure_iam_excessive_risk_category',
-                                                             'sysdig_secure_iam_execssive_risky_permissions_total',
-                                                             'sysdig_secure_iam_excessive_risk_score',
-                                                             'sysdig_secure_iam_user_risk_admin',
-                                                             'sysdig_secure_iam_user_risk_inactive',
-                                                             'sysdig_secure_iam_user_risk_no_mfa',
-                                                             'sysdig_secure_iam_user_risk_key1_not_rotated',
-                                                             'sysdig_secure_iam_user_risk_key2_not_rotated',
-                                                             'sysdig_secure_iam_user_risk_multiple_keys',
-                                                             'sysdig_secure_customer_name'
-                                                             ])
+        prom_metric_iam_policy_excessive_risky_perms_total = GaugeMetricFamily(
+            "sysdig_secure_iam_policy_excessive_risky_perms_total",
+            'IAM policies excessive risky permissions total',
+            labels=['sysdig_secure_iam_policy_name',
+                    'sysdig_secure_iam_actors_total',
+                    'sysdig_secure_iam_risk_category',
+                    'sysdig_secure_iam_policy_type',
+                    'sysdig_secure_customer_name'
+                    ])
 
-        prom_metric_iam_user_permissions_given_total = GaugeMetricFamily("sysdig_secure_iam_user_permissions_given_total",
-                                                 'IAM users permissions given',
+        prom_metric_iam_policy_excessive_risk_score = GaugeMetricFamily("sysdig_secure_iam_policy_excessive_risk_score",
+                                                                        'IAM policies excessive risk score',
+                                                                        labels=['sysdig_secure_iam_policy_name',
+                                                                                'sysdig_secure_iam_actors_total',
+                                                                                'sysdig_secure_iam_risk_category',
+                                                                                'sysdig_secure_iam_policy_type',
+                                                                                'sysdig_secure_customer_name'
+                                                                                ])
+
+        prom_metric_iam_user = GaugeMetricFamily("sysdig_secure_iam_user",
+                                                 'IAM users',
                                                  labels=['sysdig_secure_iam_user_name',
                                                          'sysdig_secure_iam_user_policies_total',
+                                                         'sysdig_secure_iam_permissions_given_total',
+                                                         'sysdig_secure_iam_permissions_effective_total',
+                                                         'sysdig_secure_iam_permissions_unused_total',
+                                                         'sysdig_secure_iam_permissions_used_total',
                                                          'sysdig_secure_iam_risk_category',
+                                                         'sysdig_secure_iam_risky_permissions_total',
+                                                         'sysdig_secure_iam_risk_score',
                                                          'sysdig_secure_iam_excessive_risk_category',
+                                                         'sysdig_secure_iam_execssive_risky_permissions_total',
+                                                         'sysdig_secure_iam_excessive_risk_score',
                                                          'sysdig_secure_iam_user_risk_admin',
                                                          'sysdig_secure_iam_user_risk_inactive',
                                                          'sysdig_secure_iam_user_risk_no_mfa',
@@ -520,6 +514,22 @@ class SecureMetricsCollector(object):
                                                          'sysdig_secure_iam_user_risk_multiple_keys',
                                                          'sysdig_secure_customer_name'
                                                          ])
+
+        prom_metric_iam_user_permissions_given_total = GaugeMetricFamily(
+            "sysdig_secure_iam_user_permissions_given_total",
+            'IAM users permissions given',
+            labels=['sysdig_secure_iam_user_name',
+                    'sysdig_secure_iam_user_policies_total',
+                    'sysdig_secure_iam_risk_category',
+                    'sysdig_secure_iam_excessive_risk_category',
+                    'sysdig_secure_iam_user_risk_admin',
+                    'sysdig_secure_iam_user_risk_inactive',
+                    'sysdig_secure_iam_user_risk_no_mfa',
+                    'sysdig_secure_iam_user_risk_key1_not_rotated',
+                    'sysdig_secure_iam_user_risk_key2_not_rotated',
+                    'sysdig_secure_iam_user_risk_multiple_keys',
+                    'sysdig_secure_customer_name'
+                    ])
 
         prom_metric_iam_user_permissions_unused_total = GaugeMetricFamily(
             "sysdig_secure_iam_user_permissions_unused_total",
@@ -560,20 +570,21 @@ class SecureMetricsCollector(object):
                                                          'sysdig_secure_customer_name'
                                                          ])
 
-        prom_metric_iam_role_permissions_given_total = GaugeMetricFamily("sysdig_secure_iam_role_permissions_given_total",
-                                                 'IAM roles permissions total',
-                                                 labels=['sysdig_secure_iam_role_name',
-                                                         'sysdig_secure_iam_role_policies_total',
-                                                         'sysdig_secure_iam_risk_category',
-                                                         'sysdig_secure_iam_excessive_risk_category',
-                                                         'sysdig_secure_iam_role_risk_admin',
-                                                         'sysdig_secure_iam_role_risk_inactive',
-                                                         'sysdig_secure_iam_role_risk_no_mfa',
-                                                         'sysdig_secure_iam_role_risk_key1_not_rotated',
-                                                         'sysdig_secure_iam_role_risk_key2_not_rotated',
-                                                         'sysdig_secure_iam_role_risk_multiple_keys',
-                                                         'sysdig_secure_customer_name'
-                                                         ])
+        prom_metric_iam_role_permissions_given_total = GaugeMetricFamily(
+            "sysdig_secure_iam_role_permissions_given_total",
+            'IAM roles permissions total',
+            labels=['sysdig_secure_iam_role_name',
+                    'sysdig_secure_iam_role_policies_total',
+                    'sysdig_secure_iam_risk_category',
+                    'sysdig_secure_iam_excessive_risk_category',
+                    'sysdig_secure_iam_role_risk_admin',
+                    'sysdig_secure_iam_role_risk_inactive',
+                    'sysdig_secure_iam_role_risk_no_mfa',
+                    'sysdig_secure_iam_role_risk_key1_not_rotated',
+                    'sysdig_secure_iam_role_risk_key2_not_rotated',
+                    'sysdig_secure_iam_role_risk_multiple_keys',
+                    'sysdig_secure_customer_name'
+                    ])
 
         prom_metric_iam_role_permissions_unused_total = GaugeMetricFamily(
             "sysdig_secure_iam_role_permissions_unused_total",
@@ -702,11 +713,14 @@ class SecureMetricsCollector(object):
 
                     prom_metric_scanning_images_v2.add_metric(
                         [scanning["origin"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
-                         scanning["policyStatus"], scanning["running"],  scanning["image_name"], scanning["asset_type"],
+                         scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
                          scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
-                         scanning["workload_type"], scanning["node_name"], str(scanning["critical"]), str(scanning["high"]),
-                         str(scanning["medium"]), str(scanning["low"]), str(scanning["in_use_critical"]), str(scanning["in_use_high"]),
-                         str(scanning["in_use_medium"]), str(scanning["in_use_low"]), str(scanning["exploitCount"]), customer_name],
+                         scanning["workload_type"], scanning["node_name"], str(scanning["critical"]),
+                         str(scanning["high"]),
+                         str(scanning["medium"]), str(scanning["low"]), str(scanning["in_use_critical"]),
+                         str(scanning["in_use_high"]),
+                         str(scanning["in_use_medium"]), str(scanning["in_use_low"]), str(scanning["exploitCount"]),
+                         customer_name],
                         len(all_scanning_v2)
                     )
 
@@ -825,9 +839,12 @@ class SecureMetricsCollector(object):
                 print("iam policies from memory - " + str(len(iam_policies)))
                 for policy in iam_policies:
                     prom_metric_iam_policy.add_metric(
-                        [policy["policyName"], str(policy["actorsTotal"]), str(policy["numPermissionsGiven"]), str(policy["numPermissionsUnused"]),
-                         policy["riskCategory"], str(policy["riskyPermissions"]), str(policy["riskScore"]), policy["policyType"], policy["excessiveRiskCategory"],
-                         str(policy["excessiveRiskyPermissions"]), str(policy["excessiveRiskScore"]), policy["customerName"]],
+                        [policy["policyName"], str(policy["actorsTotal"]), str(policy["numPermissionsGiven"]),
+                         str(policy["numPermissionsUnused"]),
+                         policy["riskCategory"], str(policy["riskyPermissions"]), str(policy["riskScore"]),
+                         policy["policyType"], policy["excessiveRiskCategory"],
+                         str(policy["excessiveRiskyPermissions"]), str(policy["excessiveRiskScore"]),
+                         policy["customerName"]],
                         len(iam_policies)
                     )
 
@@ -953,15 +970,10 @@ class SecureMetricsCollector(object):
 
             return
 
-
-
         # **********************************************************************
 
         # Using API
         # ***********************************************************************
-
-
-
 
         print("still running... waiting for the first iteration to complete. Skipping querying...")
 
@@ -1077,7 +1089,6 @@ class SecureMetricsCollector(object):
                      scanning["workload_type"], customer_name],
                     scanning["fix_exploitable_running"]
                 )
-
 
             yield prom_metric_scanning_v2_images_critical
             yield prom_metric_scanning_v2_images_high
@@ -1213,7 +1224,6 @@ class SecureMetricsCollector(object):
 
             print("yielded benchmark prom exporter")
 
-
         # iam
         if test_iam in test_area:
             try:
@@ -1285,7 +1295,8 @@ class SecureMetricsCollector(object):
             for user in iam_users:
                 prom_metric_iam_user.add_metric(
                     [user["actorName"], str(user["policiesTotal"]), str(user["numPermissionsGiven"]),
-                     str(user["effectivePermissionsCount"]), str(user["numPermissionsUnused"]), str(user["numPermissionsUsed"]),
+                     str(user["effectivePermissionsCount"]), str(user["numPermissionsUnused"]),
+                     str(user["numPermissionsUsed"]),
                      user["riskCategory"], str(user["riskyPermissions"]), str(user["riskScore"]),
                      user["excessiveRiskCategory"],
                      str(user["excessiveRiskyPermissions"]), str(user["excessiveRiskScore"]),
@@ -1295,7 +1306,7 @@ class SecureMetricsCollector(object):
                 )
 
                 prom_metric_iam_user_permissions_given_total.add_metric(
-                    [user["actorName"], str(user["policiesTotal"]),  user["riskCategory"], user["excessiveRiskCategory"],
+                    [user["actorName"], str(user["policiesTotal"]), user["riskCategory"], user["excessiveRiskCategory"],
                      user["admin"], user["inactive"], user["no_mfa"], user["key1_not_rotated"],
                      user["key2_not_rotated"], user["multiple_keys"], user["customerName"]],
                     user["numPermissionsGiven"]
@@ -1311,7 +1322,8 @@ class SecureMetricsCollector(object):
             for role in iam_roles:
                 prom_metric_iam_role.add_metric(
                     [role["actorName"], str(role["policiesTotal"]), str(role["numPermissionsGiven"]),
-                     str(role["effectivePermissionsCount"]), str(role["numPermissionsUnused"]), str(role["numPermissionsUsed"]),
+                     str(role["effectivePermissionsCount"]), str(role["numPermissionsUnused"]),
+                     str(role["numPermissionsUsed"]),
                      role["riskCategory"], str(role["riskyPermissions"]), str(role["riskScore"]),
                      role["excessiveRiskCategory"],
                      str(role["excessiveRiskyPermissions"]), str(role["excessiveRiskScore"]),
@@ -1321,7 +1333,7 @@ class SecureMetricsCollector(object):
                 )
 
                 prom_metric_iam_role_permissions_given_total.add_metric(
-                    [role["actorName"], str(role["policiesTotal"]),  role["riskCategory"], role["excessiveRiskCategory"],
+                    [role["actorName"], str(role["policiesTotal"]), role["riskCategory"], role["excessiveRiskCategory"],
                      role["admin"], role["inactive"], role["no_mfa"], role["key1_not_rotated"],
                      role["key2_not_rotated"], role["multiple_keys"], role["customerName"]],
                     role["numPermissionsGiven"]
@@ -1403,9 +1415,6 @@ def scanning_prom_exporter():
     repo_set = set()
     distro_set = set()
 
-
-
-
     for image in all_images:
         origin_set.add(image.get("origin"))
         reg_set.add(image.get("reg"))
@@ -1426,8 +1435,6 @@ def scanning_prom_exporter():
     reg_list = list(reg_set)
     repo_list = list(repo_set)
     distro_list = list(distro_set)
-
-
 
     final_dict = {}
     for image in all_images:
@@ -1653,6 +1660,7 @@ def query_scanning_v2_pipeline_images_batch():
         while next_cursor is not None:
             image_data_list_temp, next_cursor = query_scanning_v2_pipeline_images(next_cursor)
             image_data_list = image_data_list + image_data_list_temp
+            print("Total pipeline images fetched - " + len(image_data_list))
     except:
         raise
 
@@ -1746,6 +1754,7 @@ def query_scanning_v2_runtime_images_batch():
         while next_cursor is not None:
             image_data_list_temp, next_cursor = query_scanning_v2_runtime_images(next_cursor)
             image_data_list = image_data_list + image_data_list_temp
+            print("Total runtime images fetched - " + len(image_data_list))
     except:
         raise
 
@@ -1856,12 +1865,11 @@ def query_scanning_v2_runtime_images(next_cursor):
 
 
 def query_scanning_v2_image_details(runtime_images):
-
     auth_string = "Bearer " + secure_api_token
     a = 0
     for image in runtime_images:
         url = secure_url + '/api/scanning/scanresults/v2/results/' + image["resultId"] + \
-        "/vulnPkgs?filter=vulnHasFix = true and vulnIsExploitable = true and vulnIsRunning = true"
+              "/vulnPkgs?filter=vulnHasFix = true and vulnIsExploitable = true and vulnIsRunning = true"
 
         print(a)
         a = a + 1
@@ -2138,7 +2146,6 @@ def query_iam_users_roles(next_cursor, kind):
         all_users_roles = all_users_roles_temp["data"]
         next_cursor = all_users_roles_temp["options"]["next"]
 
-
         admin_risk = "Admin"
         inactive_risk = "Inactive"
         no_mfa_risk = "No MFA"
@@ -2194,7 +2201,6 @@ def query_iam_users_roles(next_cursor, kind):
         raise
 
     return user_role_data_list, next_cursor
-
 
 
 '''
