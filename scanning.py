@@ -1660,7 +1660,7 @@ def query_scanning_v2_pipeline_images_batch():
         while next_cursor is not None:
             image_data_list_temp, next_cursor = query_scanning_v2_pipeline_images(next_cursor)
             image_data_list = image_data_list + image_data_list_temp
-            print("Total pipeline images fetched - " + len(image_data_list))
+            print("Total pipeline images fetched - " + str(len(image_data_list)))
     except:
         raise
 
@@ -1754,7 +1754,7 @@ def query_scanning_v2_runtime_images_batch():
         while next_cursor is not None:
             image_data_list_temp, next_cursor = query_scanning_v2_runtime_images(next_cursor)
             image_data_list = image_data_list + image_data_list_temp
-            print("Total runtime images fetched - " + len(image_data_list))
+            print("Total runtime images fetched - " + str(len(image_data_list)))
     except:
         raise
 
