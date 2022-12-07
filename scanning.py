@@ -19,6 +19,7 @@ customer_name = os.getenv('CUSTOMER_NAME')
 query_features_list = os.getenv('QUERY_FEATURES_LIST')
 fetch_pipeline_test_only = os.getenv('QUERY_PIPELINE') # expects "yes" or "no"
 
+
 # all - query all features
 # if you want to test out a specific product area directly:
 test_scanning = "scanning_v1"
@@ -629,10 +630,11 @@ class SecureMetricsCollector(object):
         print("next_run_date_str - " + next_run_date_str)
 
         if next_run_date > curr_date and not first_time_running:
+            first_time_running = False
             print("Skipping querying......")
             print("Returning metrics from memory ")
 
-            if test_scanning_v2 in test_area:
+            if test_scanning_v2 in test_area and len(all_scanning_v2) > 0:
                 print("Scanning v2 from memory - " + str(len(all_scanning_v2)))
                 for scanning in all_scanning_v2:
                     prom_metric_scanning_v2_images_critical.add_metric(
@@ -742,7 +744,7 @@ class SecureMetricsCollector(object):
                 yield prom_metric_scanning_images_v2
                 yield prom_metric_scanning_v2_images_exploit_fix_inuse_count
 
-            if test_scanning in test_area:
+            if test_scanning in test_area and len(scanning_prom_exp_metrics) > 0:
                 print("Scanning v1 from memory - " + str(len(scanning_prom_exp_metrics)))
                 for x in scanning_prom_exp_metrics.keys():
                     temp_string = x.split("|")
@@ -752,7 +754,7 @@ class SecureMetricsCollector(object):
                         scanning_prom_exp_metrics[x])
                 yield prom_metric_scanning_images
 
-            if test_compliance in test_area:
+            if test_compliance in test_area and len(all_compliances) > 0:
                 print("Compliance from memory - " + str(len(all_compliances)))
                 for compliance in all_compliances:
                     prom_metric_compliance_pass.add_metric(
@@ -795,7 +797,7 @@ class SecureMetricsCollector(object):
                 # yield prom_metric_compliance_total
                 yield prom_metric_compliance_pass_perc
 
-            if test_benchmark in test_area:
+            if test_benchmark in test_area and len(all_benchmarks) > 0:
                 print("Benchmarks from memory - " + str(len(all_benchmarks)))
                 for benchmark in all_benchmarks:
                     prom_metric_benchmark_resource_pass.add_metric(
@@ -832,7 +834,7 @@ class SecureMetricsCollector(object):
                 yield prom_metric_benchmark_control_fail
                 yield prom_metric_benchmark_control_warn
 
-            if test_iam in test_area:
+            if test_iam in test_area and len(iam_policies) > 0:
                 print("iam policies from memory - " + str(len(iam_policies)))
                 for policy in iam_policies:
                     prom_metric_iam_policy.add_metric(
@@ -1871,37 +1873,38 @@ def query_scanning_v2_image_details(runtime_images):
         url = secure_url + '/api/scanning/scanresults/v2/results/' + image["resultId"] + \
               "/vulnPkgs?filter=vulnHasFix = true and vulnIsExploitable = true and vulnIsRunning = true"
 
-        re_run = False
+
         print(a)
         a = a + 1
         if a % 20 == 0:
             print("sleeping for 5 seconds...")
             time.sleep(5)
+
         while True:
             try:
                 response = requests.get(url, headers={"Authorization": auth_string})
-                break;
+                print("url - " + url)
             except Exception as ex:
                 logging.error("Received an exception while invoking the url: " + url)
                 logging.error(ex)
-                if "Rate limit exceeded" in ex:
+
+            if response.status_code == 200:
+                response_text = json.loads(response.text)
+                matched_total = response_text["page"]["matched"]
+                image["fix_exploitable_running"] = matched_total
+                break
+            else:
+                logging.error("Received an error trying to get the response from: " + url)
+                logging.error("Error message: " + response.text)
+                print(response.headers)
+                if "Rate limit exceeded" in response.text:
                     print(response.headers)
                     print("Got rate limit exceeded error message. Sleeping for 5 mins and retrying.")
                     time.sleep(300)
-                    print("retrying...")
+                    print("retrying..." + str(a))
                     continue
                 else:
-                    print(response.headers)
                     raise
-        if response.status_code == 200:
-            response_text = json.loads(response.text)
-            matched_total = response_text["page"]["matched"]
-            image["fix_exploitable_running"] = matched_total
-        else:
-            logging.error("Received an error trying to get the response from: " + url)
-            logging.error("Error message: " + response.text)
-            print(response.headers)
-            raise
 
     return runtime_images
 
