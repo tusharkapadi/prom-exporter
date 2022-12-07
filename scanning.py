@@ -1880,6 +1880,7 @@ def query_scanning_v2_image_details(runtime_images):
         while True:
             try:
                 response = requests.get(url, headers={"Authorization": auth_string})
+                break;
             except Exception as ex:
                 logging.error("Received an exception while invoking the url: " + url)
                 logging.error(ex)
