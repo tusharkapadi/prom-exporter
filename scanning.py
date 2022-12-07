@@ -10,13 +10,13 @@ from datetime import timedelta
 
 from sdcclient import SdScanningClient
 
-# secure_api_token = os.getenv('SECURE_API_TOKEN').replace('\n', '')
-# secure_url = os.getenv('SECURE_URL')
-# scheduled_run_minutes = int(os.getenv('SCHEDULED_RUN_MINUTES'))
-# prom_exp_url_port = int(os.getenv('PROM_EXP_URL_PORT'))
-# batch_limit = int(os.getenv('BATCH_LIMIT'))
-# customer_name = os.getenv('CUSTOMER_NAME')
-# query_features_list = os.getenv('QUERY_FEATURES_LIST')
+secure_api_token = os.getenv('SECURE_API_TOKEN').replace('\n', '')
+secure_url = os.getenv('SECURE_URL')
+scheduled_run_minutes = int(os.getenv('SCHEDULED_RUN_MINUTES'))
+prom_exp_url_port = int(os.getenv('PROM_EXP_URL_PORT'))
+batch_limit = int(os.getenv('BATCH_LIMIT'))
+customer_name = os.getenv('CUSTOMER_NAME')
+query_features_list = os.getenv('QUERY_FEATURES_LIST')
 
 
 # all - query all features
