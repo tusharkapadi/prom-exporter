@@ -17,7 +17,7 @@ prom_exp_url_port = int(os.getenv('PROM_EXP_URL_PORT'))
 batch_limit = int(os.getenv('BATCH_LIMIT'))
 customer_name = os.getenv('CUSTOMER_NAME')
 query_features_list = os.getenv('QUERY_FEATURES_LIST')
-
+fetch_pipeline_test_only = os.getenv('QUERY_PIPELINE')
 
 # all - query all features
 # if you want to test out a specific product area directly:
@@ -26,6 +26,13 @@ test_scanning_v2 = "scanning_v2"
 test_compliance = "compliance"
 test_benchmark = "benchmark"
 test_iam = "iam"
+
+print("fetch_pipeline = " + str(fetch_pipeline_test_only))
+
+if len(fetch_pipeline_test_only) == 0:
+    fetch_pipeline_test_only = True
+
+
 
 test_area = [test_scanning]
 if query_features_list == "all":
@@ -1359,7 +1366,10 @@ class SecureMetricsCollector(object):
 
 def scanning_v2_prom_exporter():
     try:
-        images_pipeline = query_scanning_v2_pipeline_images_batch()
+        if fetch_pipeline_test_only:
+            images_pipeline = query_scanning_v2_pipeline_images_batch()
+        else:
+            images_pipeline = []
         images_runtime = query_scanning_v2_runtime_images_batch()
 
         print("# of images in Pipeline (Scanning v2) - " + str(len(images_pipeline)))
