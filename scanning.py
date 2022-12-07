@@ -30,9 +30,10 @@ test_iam = "iam"
 
 print("fetch_pipeline = " + str(fetch_pipeline_test_only))
 
+
+
 if len(fetch_pipeline_test_only) == 0:
     fetch_pipeline_test_only = "yes"
-
 
 
 test_area = [test_scanning]
@@ -42,6 +43,7 @@ else:
     test_area = query_features_list
 
 first_time_running = True
+
 
 last_run_date = datetime.now()
 last_run_date_str = last_run_date.strftime("%d/%m/%Y %H:%M")
@@ -622,6 +624,8 @@ class SecureMetricsCollector(object):
         next_run_date = last_run_date + timedelta(minutes=scheduled_run_minutes)
         next_run_date_str = next_run_date.strftime("%d/%m/%Y %H:%M")
 
+        print("first time running = " + str(first_time_running))
+
         if first_time_running:
             print_info()
 
@@ -630,7 +634,7 @@ class SecureMetricsCollector(object):
         print("next_run_date_str - " + next_run_date_str)
 
         if next_run_date > curr_date and not first_time_running:
-            first_time_running = False
+
             print("Skipping querying......")
             print("Returning metrics from memory ")
 
@@ -974,6 +978,7 @@ class SecureMetricsCollector(object):
         # Using API
         # ***********************************************************************
 
+        first_time_running = False
         print("still running... waiting for the first iteration to complete. Skipping querying...")
 
         print("Querying metrics from Sysdig Secure Backend using APIs....")
