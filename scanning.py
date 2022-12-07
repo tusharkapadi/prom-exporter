@@ -19,16 +19,6 @@ from sdcclient import SdScanningClient
 # query_features_list = os.getenv('QUERY_FEATURES_LIST')
 
 
-secure_api_token = "1ba7069e-00dc-49be-9650-36f82313276c"
-secure_api_token = "effc8432-1161-4919-bcec-7fa74ea931e7"  # concur non prod
-secure_url = "https://secure.sysdig.com"
-# secure_url = "https://us2.app.sysdig.com"
-scheduled_run_minutes = 100
-prom_exp_url_port = 8000
-batch_limit = 100
-customer_name = "Concur-non-prod"
-query_features_list = "all"
-
 # all - query all features
 # if you want to test out a specific product area directly:
 test_scanning = "scanning_v1"
