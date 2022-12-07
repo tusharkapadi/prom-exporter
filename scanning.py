@@ -17,7 +17,7 @@ prom_exp_url_port = int(os.getenv('PROM_EXP_URL_PORT'))
 batch_limit = int(os.getenv('BATCH_LIMIT'))
 customer_name = os.getenv('CUSTOMER_NAME')
 query_features_list = os.getenv('QUERY_FEATURES_LIST')
-fetch_pipeline_test_only = os.getenv('QUERY_PIPELINE')
+fetch_pipeline_test_only = os.getenv('QUERY_PIPELINE') # expects "yes" or "no"
 
 # all - query all features
 # if you want to test out a specific product area directly:
@@ -30,7 +30,7 @@ test_iam = "iam"
 print("fetch_pipeline = " + str(fetch_pipeline_test_only))
 
 if len(fetch_pipeline_test_only) == 0:
-    fetch_pipeline_test_only = True
+    fetch_pipeline_test_only = "yes"
 
 
 
@@ -1366,7 +1366,7 @@ class SecureMetricsCollector(object):
 
 def scanning_v2_prom_exporter():
     try:
-        if fetch_pipeline_test_only:
+        if fetch_pipeline_test_only == "yes":
             images_pipeline = query_scanning_v2_pipeline_images_batch()
         else:
             images_pipeline = []
