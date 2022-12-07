@@ -1905,7 +1905,7 @@ def query_scanning_v2_image_details(runtime_images):
                 if "Rate limit exceeded" in response.text:
                     print(response.headers)
                     print("Got rate limit exceeded error message. Sleeping for 5 mins and retrying.")
-                    time.sleep(300)
+                    time.sleep(120)
                     print("retrying..." + str(a))
                     continue
                 else:
