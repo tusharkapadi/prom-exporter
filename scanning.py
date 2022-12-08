@@ -1359,7 +1359,11 @@ class SecureMetricsCollector(object):
 
 def scanning_v2_prom_exporter():
     try:
-        images_pipeline = query_scanning_v2_pipeline_images_batch()
+
+        # commenting out pipeline for testing purpose....
+        images_pipeline = []
+        #images_pipeline = query_scanning_v2_pipeline_images_batch()
+
         images_runtime = query_scanning_v2_runtime_images_batch()
 
         print("# of images in Pipeline (Scanning v2) - " + str(len(images_pipeline)))
