@@ -7,17 +7,21 @@ import requests
 import os
 from datetime import datetime
 from datetime import timedelta
+from os.path import exists
+
+
 
 from sdcclient import SdScanningClient
 
-secure_api_token = os.getenv('SECURE_API_TOKEN').replace('\n', '')
-secure_url = os.getenv('SECURE_URL')
-scheduled_run_minutes = int(os.getenv('SCHEDULED_RUN_MINUTES'))
-prom_exp_url_port = int(os.getenv('PROM_EXP_URL_PORT'))
-batch_limit = int(os.getenv('BATCH_LIMIT'))
-customer_name = os.getenv('CUSTOMER_NAME')
-query_features_list = os.getenv('QUERY_FEATURES_LIST')
-fetch_pipeline_test_only = os.getenv('QUERY_PIPELINE') # expects "yes" or "no"
+# secure_api_token = os.getenv('SECURE_API_TOKEN').replace('\n', '')
+# secure_url = os.getenv('SECURE_URL')
+# scheduled_run_minutes = int(os.getenv('SCHEDULED_RUN_MINUTES'))
+# prom_exp_url_port = int(os.getenv('PROM_EXP_URL_PORT'))
+# batch_limit = int(os.getenv('BATCH_LIMIT'))
+# customer_name = os.getenv('CUSTOMER_NAME')
+# query_features_list = os.getenv('QUERY_FEATURES_LIST')
+# fetch_pipeline_test_only = os.getenv('QUERY_PIPELINE') # expects "yes" or "no"
+# save_list_to_file = os.getenv('SAVE_LIST_TO_FILE') # "yes" or "no" - saves fetched api data into a file and clear the   memory. Useful when you have too many images
 
 
 # all - query all features
@@ -620,6 +624,7 @@ class SecureMetricsCollector(object):
         global iam_roles
         global images_runtime_exploit_hasfix_inuse
         global customer_name
+        global save_list_to_file
 
         next_run_date = last_run_date + timedelta(minutes=scheduled_run_minutes)
         next_run_date_str = next_run_date.strftime("%d/%m/%Y %H:%M")
@@ -638,338 +643,364 @@ class SecureMetricsCollector(object):
             print("Skipping querying......")
             print("Returning metrics from memory ")
 
-            if test_scanning_v2 in test_area and len(all_scanning_v2) > 0:
-                print("Scanning v2 from memory - " + str(len(all_scanning_v2)))
-                for scanning in all_scanning_v2:
-                    prom_metric_scanning_v2_images_critical.add_metric(
-                        [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
-                         scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
-                         scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
-                         scanning["workload_type"], customer_name],
-                        scanning["critical"]
-                    )
+            if test_scanning_v2 in test_area:
+                all_scanning_v2 = read_list_from_file("all_reading_v2.json")
+                if len(all_scanning_v2) > 0:
+                    print("Scanning v2 from memory - " + str(len(all_scanning_v2)))
+                    for scanning in all_scanning_v2:
+                        prom_metric_scanning_v2_images_critical.add_metric(
+                            [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
+                             scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
+                             scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
+                             scanning["workload_type"], customer_name],
+                            scanning["critical"]
+                        )
 
-                    prom_metric_scanning_v2_images_high.add_metric(
-                        [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
-                         scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
-                         scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
-                         scanning["workload_type"], customer_name],
-                        scanning["high"]
-                    )
+                        prom_metric_scanning_v2_images_high.add_metric(
+                            [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
+                             scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
+                             scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
+                             scanning["workload_type"], customer_name],
+                            scanning["high"]
+                        )
 
-                    prom_metric_scanning_v2_images_medium.add_metric(
-                        [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
-                         scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
-                         scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
-                         scanning["workload_type"], customer_name],
-                        scanning["medium"]
-                    )
+                        prom_metric_scanning_v2_images_medium.add_metric(
+                            [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
+                             scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
+                             scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
+                             scanning["workload_type"], customer_name],
+                            scanning["medium"]
+                        )
 
-                    prom_metric_scanning_v2_images_low.add_metric(
-                        [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
-                         scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
-                         scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
-                         scanning["workload_type"], customer_name],
-                        scanning["low"]
-                    )
+                        prom_metric_scanning_v2_images_low.add_metric(
+                            [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
+                             scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
+                             scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
+                             scanning["workload_type"], customer_name],
+                            scanning["low"]
+                        )
 
-                    # in use
-                    prom_metric_scanning_v2_images_in_use_critical.add_metric(
-                        [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
-                         scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
-                         scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
-                         scanning["workload_type"], customer_name],
-                        scanning["in_use_critical"]
-                    )
+                        # in use
+                        prom_metric_scanning_v2_images_in_use_critical.add_metric(
+                            [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
+                             scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
+                             scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
+                             scanning["workload_type"], customer_name],
+                            scanning["in_use_critical"]
+                        )
 
-                    prom_metric_scanning_v2_images_in_use_high.add_metric(
-                        [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
-                         scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
-                         scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
-                         scanning["workload_type"], customer_name],
-                        scanning["in_use_high"]
-                    )
+                        prom_metric_scanning_v2_images_in_use_high.add_metric(
+                            [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
+                             scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
+                             scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
+                             scanning["workload_type"], customer_name],
+                            scanning["in_use_high"]
+                        )
 
-                    prom_metric_scanning_v2_images_in_use_medium.add_metric(
-                        [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
-                         scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
-                         scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
-                         scanning["workload_type"], customer_name],
-                        scanning["in_use_medium"]
-                    )
+                        prom_metric_scanning_v2_images_in_use_medium.add_metric(
+                            [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
+                             scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
+                             scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
+                             scanning["workload_type"], customer_name],
+                            scanning["in_use_medium"]
+                        )
 
-                    prom_metric_scanning_v2_images_in_use_low.add_metric(
-                        [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
-                         scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
-                         scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
-                         scanning["workload_type"], customer_name],
-                        scanning["in_use_low"]
-                    )
+                        prom_metric_scanning_v2_images_in_use_low.add_metric(
+                            [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
+                             scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
+                             scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
+                             scanning["workload_type"], customer_name],
+                            scanning["in_use_low"]
+                        )
 
-                    prom_metric_scanning_v2_images_exploit_count.add_metric(
-                        [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
-                         scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
-                         scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
-                         scanning["workload_type"], customer_name],
-                        scanning["exploitCount"]
-                    )
+                        prom_metric_scanning_v2_images_exploit_count.add_metric(
+                            [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
+                             scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
+                             scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
+                             scanning["workload_type"], customer_name],
+                            scanning["exploitCount"]
+                        )
 
-                    prom_metric_scanning_images_v2.add_metric(
-                        [scanning["origin"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
-                         scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
-                         scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
-                         scanning["workload_type"], scanning["node_name"], str(scanning["critical"]),
-                         str(scanning["high"]),
-                         str(scanning["medium"]), str(scanning["low"]), str(scanning["in_use_critical"]),
-                         str(scanning["in_use_high"]),
-                         str(scanning["in_use_medium"]), str(scanning["in_use_low"]), str(scanning["exploitCount"]),
-                         customer_name],
-                        len(all_scanning_v2)
-                    )
+                        prom_metric_scanning_images_v2.add_metric(
+                            [scanning["origin"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
+                             scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
+                             scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
+                             scanning["workload_type"], scanning["node_name"], str(scanning["critical"]),
+                             str(scanning["high"]),
+                             str(scanning["medium"]), str(scanning["low"]), str(scanning["in_use_critical"]),
+                             str(scanning["in_use_high"]),
+                             str(scanning["in_use_medium"]), str(scanning["in_use_low"]), str(scanning["exploitCount"]),
+                             customer_name],
+                            len(all_scanning_v2)
+                        )
 
-                for scanning in images_runtime_exploit_hasfix_inuse:
-                    prom_metric_scanning_v2_images_exploit_fix_inuse_count.add_metric(
-                        [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
-                         scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
-                         scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
-                         scanning["workload_type"], customer_name],
-                        scanning["fix_exploitable_running"]
-                    )
+                    for scanning in images_runtime_exploit_hasfix_inuse:
+                        prom_metric_scanning_v2_images_exploit_fix_inuse_count.add_metric(
+                            [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
+                             scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
+                             scanning["cluster_name"], scanning["namespace_name"], scanning["workload_name"],
+                             scanning["workload_type"], customer_name],
+                            scanning["fix_exploitable_running"]
+                        )
 
-                yield prom_metric_scanning_v2_images_critical
-                yield prom_metric_scanning_v2_images_high
-                yield prom_metric_scanning_v2_images_medium
-                yield prom_metric_scanning_v2_images_low
-                yield prom_metric_scanning_v2_images_in_use_critical
-                yield prom_metric_scanning_v2_images_in_use_high
-                yield prom_metric_scanning_v2_images_in_use_medium
-                yield prom_metric_scanning_v2_images_in_use_low
-                yield prom_metric_scanning_v2_images_exploit_count
-                yield prom_metric_scanning_images_v2
-                yield prom_metric_scanning_v2_images_exploit_fix_inuse_count
+                    yield prom_metric_scanning_v2_images_critical
+                    yield prom_metric_scanning_v2_images_high
+                    yield prom_metric_scanning_v2_images_medium
+                    yield prom_metric_scanning_v2_images_low
+                    yield prom_metric_scanning_v2_images_in_use_critical
+                    yield prom_metric_scanning_v2_images_in_use_high
+                    yield prom_metric_scanning_v2_images_in_use_medium
+                    yield prom_metric_scanning_v2_images_in_use_low
+                    yield prom_metric_scanning_v2_images_exploit_count
+                    yield prom_metric_scanning_images_v2
+                    yield prom_metric_scanning_v2_images_exploit_fix_inuse_count
 
-            if test_scanning in test_area and len(scanning_prom_exp_metrics) > 0:
-                print("Scanning v1 from memory - " + str(len(scanning_prom_exp_metrics)))
-                for x in scanning_prom_exp_metrics.keys():
-                    temp_string = x.split("|")
-                    prom_metric_scanning_images.add_metric(
-                        [temp_string[0], temp_string[1], temp_string[2], temp_string[3], temp_string[4], temp_string[5],
-                         temp_string[6], temp_string[7], customer_name],
-                        scanning_prom_exp_metrics[x])
-                yield prom_metric_scanning_images
+                    all_scanning_v2.clear()
 
-            if test_compliance in test_area and len(all_compliances) > 0:
-                print("Compliance from memory - " + str(len(all_compliances)))
-                for compliance in all_compliances:
-                    prom_metric_compliance_pass.add_metric(
-                        [compliance["name"], compliance["type"], compliance["schema"], compliance["framework"],
-                         compliance["version"], compliance["platform"], compliance["family"], customer_name],
-                        compliance["control_pass"])
 
-                    prom_metric_compliance_fail.add_metric(
-                        [compliance["name"], compliance["type"], compliance["schema"], compliance["framework"],
-                         compliance["version"], compliance["platform"], compliance["family"], customer_name],
-                        compliance["control_fail"])
+            if test_scanning in test_area:
 
-                    prom_metric_compliance_warn.add_metric(
-                        [compliance["name"], compliance["type"], compliance["schema"], compliance["framework"],
-                         compliance["version"], compliance["platform"], compliance["family"], customer_name],
-                        compliance["control_warn"])
+                scanning_prom_exp_metrics = read_list_from_file("scanning_prom_exp_metrics.json")
+                if len(scanning_prom_exp_metrics) > 0:
+                    print("Scanning v1 from memory - " + str(len(scanning_prom_exp_metrics)))
+                    for x in scanning_prom_exp_metrics.keys():
+                        temp_string = x.split("|")
+                        prom_metric_scanning_images.add_metric(
+                            [temp_string[0], temp_string[1], temp_string[2], temp_string[3], temp_string[4], temp_string[5],
+                             temp_string[6], temp_string[7], customer_name],
+                            scanning_prom_exp_metrics[x])
+                    yield prom_metric_scanning_images
+                    scanning_prom_exp_metrics.clear()
 
-                    prom_metric_compliance_pass_perc.add_metric(
-                        [compliance["name"], compliance["type"], compliance["schema"], compliance["framework"],
-                         compliance["version"], compliance["platform"], compliance["family"], customer_name],
-                        compliance["control_pass_percent"])
+            if test_compliance in test_area:
+                all_compliances = read_list_from_file("all_compliances.json")
+                if len(all_compliances) > 0:
+                    print("Compliance from memory - " + str(len(all_compliances)))
+                    for compliance in all_compliances:
+                        prom_metric_compliance_pass.add_metric(
+                            [compliance["name"], compliance["type"], compliance["schema"], compliance["framework"],
+                             compliance["version"], compliance["platform"], compliance["family"], customer_name],
+                            compliance["control_pass"])
 
-                    prom_metric_compliance_total.add_metric(
-                        [compliance["name"], compliance["type"], compliance["schema"], compliance["framework"],
-                         compliance["version"], compliance["platform"], compliance["family"], customer_name],
-                        compliance["control_total"])
+                        prom_metric_compliance_fail.add_metric(
+                            [compliance["name"], compliance["type"], compliance["schema"], compliance["framework"],
+                             compliance["version"], compliance["platform"], compliance["family"], customer_name],
+                            compliance["control_fail"])
 
-                    # prom_metric_compliance_pass.add_metric([compliance["standard"], compliance["compliance"], compliance["compliance_type"]],
-                    #                                        compliance["pass"])
-                    # prom_metric_compliance_fail.add_metric([compliance["standard"], compliance["compliance"], compliance["compliance_type"]],
-                    #                                        compliance["fail"])
-                    # prom_metric_compliance_checked.add_metric([compliance["standard"], compliance["compliance"], compliance["compliance_type"]],
-                    #                                           compliance["checked"])
-                    # prom_metric_compliance_unchecked.add_metric([compliance["standard"], compliance["compliance"], compliance["compliance_type"]],
-                    #                                             compliance["unchecked"])
+                        prom_metric_compliance_warn.add_metric(
+                            [compliance["name"], compliance["type"], compliance["schema"], compliance["framework"],
+                             compliance["version"], compliance["platform"], compliance["family"], customer_name],
+                            compliance["control_warn"])
 
-                yield prom_metric_compliance_pass
-                yield prom_metric_compliance_fail
-                yield prom_metric_compliance_warn
-                # yield prom_metric_compliance_total
-                yield prom_metric_compliance_pass_perc
+                        prom_metric_compliance_pass_perc.add_metric(
+                            [compliance["name"], compliance["type"], compliance["schema"], compliance["framework"],
+                             compliance["version"], compliance["platform"], compliance["family"], customer_name],
+                            compliance["control_pass_percent"])
 
-            if test_benchmark in test_area and len(all_benchmarks) > 0:
-                print("Benchmarks from memory - " + str(len(all_benchmarks)))
-                for benchmark in all_benchmarks:
-                    prom_metric_benchmark_resource_pass.add_metric(
-                        [benchmark["platform"], benchmark["name"], benchmark["schema"], benchmark["cluster_name"],
-                         benchmark["node_name"], customer_name],
-                        benchmark["resource_pass"])
-                    prom_metric_benchmark_resource_fail.add_metric(
-                        [benchmark["platform"], benchmark["name"], benchmark["schema"], benchmark["cluster_name"],
-                         benchmark["node_name"], customer_name],
-                        benchmark["resource_fail"])
-                    prom_metric_benchmark_resource_warn.add_metric(
-                        [benchmark["platform"], benchmark["name"], benchmark["schema"], benchmark["cluster_name"],
-                         benchmark["node_name"], customer_name],
-                        benchmark["resource_warn"])
+                        prom_metric_compliance_total.add_metric(
+                            [compliance["name"], compliance["type"], compliance["schema"], compliance["framework"],
+                             compliance["version"], compliance["platform"], compliance["family"], customer_name],
+                            compliance["control_total"])
 
-                    prom_metric_benchmark_control_pass.add_metric(
-                        [benchmark["platform"], benchmark["name"], benchmark["schema"], benchmark["cluster_name"],
-                         benchmark["node_name"], customer_name],
-                        benchmark["control_pass"])
-                    prom_metric_benchmark_control_fail.add_metric(
-                        [benchmark["platform"], benchmark["name"], benchmark["schema"], benchmark["cluster_name"],
-                         benchmark["node_name"], customer_name],
-                        benchmark["control_fail"])
-                    prom_metric_benchmark_control_warn.add_metric(
-                        [benchmark["platform"], benchmark["name"], benchmark["schema"], benchmark["cluster_name"],
-                         benchmark["node_name"], customer_name],
-                        benchmark["control_warn"])
+                        # prom_metric_compliance_pass.add_metric([compliance["standard"], compliance["compliance"], compliance["compliance_type"]],
+                        #                                        compliance["pass"])
+                        # prom_metric_compliance_fail.add_metric([compliance["standard"], compliance["compliance"], compliance["compliance_type"]],
+                        #                                        compliance["fail"])
+                        # prom_metric_compliance_checked.add_metric([compliance["standard"], compliance["compliance"], compliance["compliance_type"]],
+                        #                                           compliance["checked"])
+                        # prom_metric_compliance_unchecked.add_metric([compliance["standard"], compliance["compliance"], compliance["compliance_type"]],
+                        #                                             compliance["unchecked"])
 
-                yield prom_metric_benchmark_resource_pass
-                yield prom_metric_benchmark_resource_fail
-                yield prom_metric_benchmark_resource_warn
+                    yield prom_metric_compliance_pass
+                    yield prom_metric_compliance_fail
+                    yield prom_metric_compliance_warn
+                    # yield prom_metric_compliance_total
+                    yield prom_metric_compliance_pass_perc
+                    all_compliances.clear()
 
-                yield prom_metric_benchmark_control_pass
-                yield prom_metric_benchmark_control_fail
-                yield prom_metric_benchmark_control_warn
+            if test_benchmark in test_area:
+                all_benchmarks = read_list_from_file("all_benchmarks.json")
+                if len(all_benchmarks) > 0:
+                    print("Benchmarks from memory - " + str(len(all_benchmarks)))
+                    for benchmark in all_benchmarks:
+                        prom_metric_benchmark_resource_pass.add_metric(
+                            [benchmark["platform"], benchmark["name"], benchmark["schema"], benchmark["cluster_name"],
+                             benchmark["node_name"], customer_name],
+                            benchmark["resource_pass"])
+                        prom_metric_benchmark_resource_fail.add_metric(
+                            [benchmark["platform"], benchmark["name"], benchmark["schema"], benchmark["cluster_name"],
+                             benchmark["node_name"], customer_name],
+                            benchmark["resource_fail"])
+                        prom_metric_benchmark_resource_warn.add_metric(
+                            [benchmark["platform"], benchmark["name"], benchmark["schema"], benchmark["cluster_name"],
+                             benchmark["node_name"], customer_name],
+                            benchmark["resource_warn"])
 
-            if test_iam in test_area and len(iam_policies) > 0:
-                print("iam policies from memory - " + str(len(iam_policies)))
-                for policy in iam_policies:
-                    prom_metric_iam_policy.add_metric(
-                        [policy["policyName"], str(policy["actorsTotal"]), str(policy["numPermissionsGiven"]),
-                         str(policy["numPermissionsUnused"]),
-                         policy["riskCategory"], str(policy["riskyPermissions"]), str(policy["riskScore"]),
-                         policy["policyType"], policy["excessiveRiskCategory"],
-                         str(policy["excessiveRiskyPermissions"]), str(policy["excessiveRiskScore"]),
-                         policy["customerName"]],
-                        len(iam_policies)
-                    )
+                        prom_metric_benchmark_control_pass.add_metric(
+                            [benchmark["platform"], benchmark["name"], benchmark["schema"], benchmark["cluster_name"],
+                             benchmark["node_name"], customer_name],
+                            benchmark["control_pass"])
+                        prom_metric_benchmark_control_fail.add_metric(
+                            [benchmark["platform"], benchmark["name"], benchmark["schema"], benchmark["cluster_name"],
+                             benchmark["node_name"], customer_name],
+                            benchmark["control_fail"])
+                        prom_metric_benchmark_control_warn.add_metric(
+                            [benchmark["platform"], benchmark["name"], benchmark["schema"], benchmark["cluster_name"],
+                             benchmark["node_name"], customer_name],
+                            benchmark["control_warn"])
 
-                    prom_metric_iam_policy_perms_given_total.add_metric(
-                        [policy["policyName"], str(policy["actorsTotal"]),
-                         policy["riskCategory"], policy["policyType"],
-                         policy["customerName"]],
-                        policy["numPermissionsGiven"]
-                    )
+                    yield prom_metric_benchmark_resource_pass
+                    yield prom_metric_benchmark_resource_fail
+                    yield prom_metric_benchmark_resource_warn
 
-                    prom_metric_iam_policy_perms_unused_total.add_metric(
-                        [policy["policyName"], str(policy["actorsTotal"]),
-                         policy["riskCategory"], policy["policyType"],
-                         policy["customerName"]],
-                        policy["numPermissionsUnused"]
-                    )
+                    yield prom_metric_benchmark_control_pass
+                    yield prom_metric_benchmark_control_fail
+                    yield prom_metric_benchmark_control_warn
 
-                    prom_metric_iam_policy_risky_perms_total.add_metric(
-                        [policy["policyName"], str(policy["actorsTotal"]),
-                         policy["riskCategory"], policy["policyType"],
-                         policy["customerName"]],
-                        policy["riskyPermissions"]
-                    )
+                    all_benchmarks.clear()
 
-                    prom_metric_iam_policy_risk_score.add_metric(
-                        [policy["policyName"], str(policy["actorsTotal"]),
-                         policy["riskCategory"], policy["policyType"],
-                         policy["customerName"]],
-                        policy["riskScore"]
-                    )
 
-                    prom_metric_iam_policy_excessive_risky_perms_total.add_metric(
-                        [policy["policyName"], str(policy["actorsTotal"]),
-                         policy["riskCategory"], policy["policyType"],
-                         policy["customerName"]],
-                        policy["excessiveRiskyPermissions"]
-                    )
+            if test_iam in test_area:
+                iam_policies = read_list_from_file("iam_policies.json")
+                iam_users = read_list_from_file("iam_users.json")
+                iam_roles = read_list_from_file("iam_roles.json")
+                if len(iam_policies) > 0:
+                    print("iam policies from memory - " + str(len(iam_policies)))
 
-                    prom_metric_iam_policy_excessive_risk_score.add_metric(
-                        [policy["policyName"], str(policy["actorsTotal"]),
-                         policy["riskCategory"], policy["policyType"],
-                         policy["customerName"]],
-                        policy["excessiveRiskScore"]
-                    )
+                    for policy in iam_policies:
+                        prom_metric_iam_policy.add_metric(
+                            [policy["policyName"], str(policy["actorsTotal"]), str(policy["numPermissionsGiven"]),
+                             str(policy["numPermissionsUnused"]),
+                             policy["riskCategory"], str(policy["riskyPermissions"]), str(policy["riskScore"]),
+                             policy["policyType"], policy["excessiveRiskCategory"],
+                             str(policy["excessiveRiskyPermissions"]), str(policy["excessiveRiskScore"]),
+                             policy["customerName"]],
+                            len(iam_policies)
+                        )
 
-                print("iam users from memory - " + str(len(iam_users)))
-                for user in iam_users:
-                    prom_metric_iam_user.add_metric(
-                        [user["actorName"], str(user["policiesTotal"]), str(user["numPermissionsGiven"]),
-                         str(user["effectivePermissionsCount"]), str(user["numPermissionsUnused"]),
-                         str(user["numPermissionsUsed"]),
-                         user["riskCategory"], str(user["riskyPermissions"]), str(user["riskScore"]),
-                         user["excessiveRiskCategory"],
-                         str(user["excessiveRiskyPermissions"]), str(user["excessiveRiskScore"]),
-                         user["admin"], user["inactive"], user["no_mfa"], user["key1_not_rotated"],
-                         user["key2_not_rotated"], user["multiple_keys"], user["customerName"]],
-                        len(iam_users)
-                    )
+                        prom_metric_iam_policy_perms_given_total.add_metric(
+                            [policy["policyName"], str(policy["actorsTotal"]),
+                             policy["riskCategory"], policy["policyType"],
+                             policy["customerName"]],
+                            policy["numPermissionsGiven"]
+                        )
 
-                    prom_metric_iam_user_permissions_given_total.add_metric(
-                        [user["actorName"], str(user["policiesTotal"]), user["riskCategory"],
-                         user["excessiveRiskCategory"],
-                         user["admin"], user["inactive"], user["no_mfa"], user["key1_not_rotated"],
-                         user["key2_not_rotated"], user["multiple_keys"], user["customerName"]],
-                        user["numPermissionsGiven"]
-                    )
+                        prom_metric_iam_policy_perms_unused_total.add_metric(
+                            [policy["policyName"], str(policy["actorsTotal"]),
+                             policy["riskCategory"], policy["policyType"],
+                             policy["customerName"]],
+                            policy["numPermissionsUnused"]
+                        )
 
-                    prom_metric_iam_user_permissions_unused_total.add_metric(
-                        [user["actorName"], str(user["policiesTotal"]), user["riskCategory"],
-                         user["excessiveRiskCategory"],
-                         user["admin"], user["inactive"], user["no_mfa"], user["key1_not_rotated"],
-                         user["key2_not_rotated"], user["multiple_keys"], user["customerName"]],
-                        user["numPermissionsUnused"]
-                    )
+                        prom_metric_iam_policy_risky_perms_total.add_metric(
+                            [policy["policyName"], str(policy["actorsTotal"]),
+                             policy["riskCategory"], policy["policyType"],
+                             policy["customerName"]],
+                            policy["riskyPermissions"]
+                        )
 
-                print("iam roles from memory - " + str(len(iam_roles)))
-                for role in iam_roles:
-                    prom_metric_iam_role.add_metric(
-                        [role["actorName"], str(role["policiesTotal"]), str(role["numPermissionsGiven"]),
-                         str(role["effectivePermissionsCount"]), str(role["numPermissionsUnused"]),
-                         str(role["numPermissionsUsed"]),
-                         role["riskCategory"], str(role["riskyPermissions"]), str(role["riskScore"]),
-                         role["excessiveRiskCategory"],
-                         str(role["excessiveRiskyPermissions"]), str(role["excessiveRiskScore"]),
-                         role["admin"], role["inactive"], role["no_mfa"], role["key1_not_rotated"],
-                         role["key2_not_rotated"], role["multiple_keys"], role["customerName"]],
-                        len(iam_roles)
-                    )
+                        prom_metric_iam_policy_risk_score.add_metric(
+                            [policy["policyName"], str(policy["actorsTotal"]),
+                             policy["riskCategory"], policy["policyType"],
+                             policy["customerName"]],
+                            policy["riskScore"]
+                        )
 
-                    prom_metric_iam_role_permissions_given_total.add_metric(
-                        [role["actorName"], str(role["policiesTotal"]), role["riskCategory"],
-                         role["excessiveRiskCategory"],
-                         role["admin"], role["inactive"], role["no_mfa"], role["key1_not_rotated"],
-                         role["key2_not_rotated"], role["multiple_keys"], role["customerName"]],
-                        role["numPermissionsGiven"]
-                    )
+                        prom_metric_iam_policy_excessive_risky_perms_total.add_metric(
+                            [policy["policyName"], str(policy["actorsTotal"]),
+                             policy["riskCategory"], policy["policyType"],
+                             policy["customerName"]],
+                            policy["excessiveRiskyPermissions"]
+                        )
 
-                    prom_metric_iam_role_permissions_unused_total.add_metric(
-                        [role["actorName"], str(role["policiesTotal"]), role["riskCategory"],
-                         role["excessiveRiskCategory"],
-                         role["admin"], role["inactive"], role["no_mfa"], role["key1_not_rotated"],
-                         role["key2_not_rotated"], role["multiple_keys"], role["customerName"]],
-                        role["numPermissionsUnused"]
-                    )
+                        prom_metric_iam_policy_excessive_risk_score.add_metric(
+                            [policy["policyName"], str(policy["actorsTotal"]),
+                             policy["riskCategory"], policy["policyType"],
+                             policy["customerName"]],
+                            policy["excessiveRiskScore"]
+                        )
 
-                yield prom_metric_iam_policy
-                yield prom_metric_iam_policy_perms_given_total
-                yield prom_metric_iam_policy_perms_unused_total
-                yield prom_metric_iam_policy_risky_perms_total
-                yield prom_metric_iam_policy_risk_score
-                yield prom_metric_iam_policy_excessive_risky_perms_total
-                yield prom_metric_iam_policy_excessive_risk_score
+                    print("iam users from memory - " + str(len(iam_users)))
+                    for user in iam_users:
+                        prom_metric_iam_user.add_metric(
+                            [user["actorName"], str(user["policiesTotal"]), str(user["numPermissionsGiven"]),
+                             str(user["effectivePermissionsCount"]), str(user["numPermissionsUnused"]),
+                             str(user["numPermissionsUsed"]),
+                             user["riskCategory"], str(user["riskyPermissions"]), str(user["riskScore"]),
+                             user["excessiveRiskCategory"],
+                             str(user["excessiveRiskyPermissions"]), str(user["excessiveRiskScore"]),
+                             user["admin"], user["inactive"], user["no_mfa"], user["key1_not_rotated"],
+                             user["key2_not_rotated"], user["multiple_keys"], user["customerName"]],
+                            len(iam_users)
+                        )
 
-                yield prom_metric_iam_user
-                yield prom_metric_iam_user_permissions_given_total
-                yield prom_metric_iam_user_permissions_unused_total
+                        prom_metric_iam_user_permissions_given_total.add_metric(
+                            [user["actorName"], str(user["policiesTotal"]), user["riskCategory"],
+                             user["excessiveRiskCategory"],
+                             user["admin"], user["inactive"], user["no_mfa"], user["key1_not_rotated"],
+                             user["key2_not_rotated"], user["multiple_keys"], user["customerName"]],
+                            user["numPermissionsGiven"]
+                        )
 
-                yield prom_metric_iam_role
-                yield prom_metric_iam_role_permissions_given_total
-                yield prom_metric_iam_role_permissions_unused_total
+                        prom_metric_iam_user_permissions_unused_total.add_metric(
+                            [user["actorName"], str(user["policiesTotal"]), user["riskCategory"],
+                             user["excessiveRiskCategory"],
+                             user["admin"], user["inactive"], user["no_mfa"], user["key1_not_rotated"],
+                             user["key2_not_rotated"], user["multiple_keys"], user["customerName"]],
+                            user["numPermissionsUnused"]
+                        )
 
-                print("yielded iam prom exporter")
+                    print("iam roles from memory - " + str(len(iam_roles)))
+                    for role in iam_roles:
+                        prom_metric_iam_role.add_metric(
+                            [role["actorName"], str(role["policiesTotal"]), str(role["numPermissionsGiven"]),
+                             str(role["effectivePermissionsCount"]), str(role["numPermissionsUnused"]),
+                             str(role["numPermissionsUsed"]),
+                             role["riskCategory"], str(role["riskyPermissions"]), str(role["riskScore"]),
+                             role["excessiveRiskCategory"],
+                             str(role["excessiveRiskyPermissions"]), str(role["excessiveRiskScore"]),
+                             role["admin"], role["inactive"], role["no_mfa"], role["key1_not_rotated"],
+                             role["key2_not_rotated"], role["multiple_keys"], role["customerName"]],
+                            len(iam_roles)
+                        )
+
+                        prom_metric_iam_role_permissions_given_total.add_metric(
+                            [role["actorName"], str(role["policiesTotal"]), role["riskCategory"],
+                             role["excessiveRiskCategory"],
+                             role["admin"], role["inactive"], role["no_mfa"], role["key1_not_rotated"],
+                             role["key2_not_rotated"], role["multiple_keys"], role["customerName"]],
+                            role["numPermissionsGiven"]
+                        )
+
+                        prom_metric_iam_role_permissions_unused_total.add_metric(
+                            [role["actorName"], str(role["policiesTotal"]), role["riskCategory"],
+                             role["excessiveRiskCategory"],
+                             role["admin"], role["inactive"], role["no_mfa"], role["key1_not_rotated"],
+                             role["key2_not_rotated"], role["multiple_keys"], role["customerName"]],
+                            role["numPermissionsUnused"]
+                        )
+
+                    yield prom_metric_iam_policy
+                    yield prom_metric_iam_policy_perms_given_total
+                    yield prom_metric_iam_policy_perms_unused_total
+                    yield prom_metric_iam_policy_risky_perms_total
+                    yield prom_metric_iam_policy_risk_score
+                    yield prom_metric_iam_policy_excessive_risky_perms_total
+                    yield prom_metric_iam_policy_excessive_risk_score
+
+                    yield prom_metric_iam_user
+                    yield prom_metric_iam_user_permissions_given_total
+                    yield prom_metric_iam_user_permissions_unused_total
+
+                    yield prom_metric_iam_role
+                    yield prom_metric_iam_role_permissions_given_total
+                    yield prom_metric_iam_role_permissions_unused_total
+
+                    print("yielded iam prom exporter")
+
+                    iam_policies.clear()
+                    iam_users.clear()
+                    iam_roles.clear()
 
             return
 
@@ -978,7 +1009,7 @@ class SecureMetricsCollector(object):
         # Using API
         # ***********************************************************************
 
-        first_time_running = False
+        #first_time_running = False
         print("still running... waiting for the first iteration to complete. Skipping querying...")
 
         print("Querying metrics from Sysdig Secure Backend using APIs....")
@@ -991,6 +1022,7 @@ class SecureMetricsCollector(object):
         if test_scanning_v2 in test_area:
             try:
                 all_scanning_v2, images_runtime_exploit_hasfix_inuse = scanning_v2_prom_exporter()
+
             except Exception as ex:
                 logging.error(ex)
                 return
@@ -1108,6 +1140,11 @@ class SecureMetricsCollector(object):
 
             print("yielded scanning_v2 prom exporter")
 
+            write_list_to_file(all_scanning_v2, "all_scanning_v2.json")
+            write_list_to_file(images_runtime_exploit_hasfix_inuse, "images_runtime_exploit_hasfix_inuse.json")
+            all_scanning_v2.clear()
+            images_runtime_exploit_hasfix_inuse.clear()
+
         # scanning - old
         if test_scanning in test_area:
 
@@ -1131,12 +1168,18 @@ class SecureMetricsCollector(object):
 
             print("yielded scanning prom exporter")
 
+            write_list_to_file(scanning_prom_exp_metrics, "scanning_prom_exp_metrics.json")
+            scanning_prom_exp_metrics.clear()
+
         # compliance
         if test_compliance in test_area:
 
             all_compliances = compliance_prom_exporter()
 
             print("all compliance count - " + str(len(all_compliances)))
+
+            write_list_to_file(all_compliances, "all_compliances.json")
+            test_list = read_list_from_file("all_compliances.json")
 
             for compliance in all_compliances:
                 prom_metric_compliance_pass.add_metric(
@@ -1180,6 +1223,9 @@ class SecureMetricsCollector(object):
             yield prom_metric_compliance_pass_perc
 
             print("yielded compliance prom exporter")
+
+            write_list_to_file(all_compliances, "all_compliances.json")
+            all_compliances.clear()
 
         # Benchmarks
 
@@ -1227,6 +1273,9 @@ class SecureMetricsCollector(object):
             yield prom_metric_benchmark_control_warn
 
             print("yielded benchmark prom exporter")
+
+            write_list_to_file(all_benchmarks, "all_benchmarks.json")
+            all_benchmarks.clear()
 
         # iam
         if test_iam in test_area:
@@ -1367,6 +1416,15 @@ class SecureMetricsCollector(object):
             yield prom_metric_iam_role_permissions_unused_total
 
             print("yielded iam prom exporter")
+
+            write_list_to_file(iam_policies, "iam_policies.json")
+            iam_policies.clear()
+
+            write_list_to_file(iam_users, "iam_users.json")
+            iam_users.clear()
+
+            write_list_to_file(iam_roles, "iam_roles.json")
+            iam_roles.clear()
 
         first_time_running = False
 
@@ -2253,6 +2311,22 @@ def query_runtime_images():
     return all_runtime_images
 '''
 
+def write_list_to_file(data, file_name):
+
+    if save_list_to_file.lower() == "yes":
+        print("saving data into file - " + file_name)
+        with open(file_name, 'w') as filehandle:
+            json.dump(data, filehandle)
+
+def read_list_from_file(file_name):
+    if save_list_to_file.lower() == "yes":
+        if exists(file_name):
+            print("reading data from file - " + file_name)
+            with open(file_name, 'r') as filehandle:
+                return json.load(filehandle)
+        else:
+            print("file " + file_name + " does not exist yet")
+
 
 def print_info():
     print("-------------------------------------")
@@ -2262,6 +2336,7 @@ def print_info():
     print("scheduled_run_minutes: " + str(scheduled_run_minutes))
     print("customer_name: " + customer_name)
     print("Querying for: " + str(query_features_list))
+    print("Save List to File: " + save_list_to_file)
     print("-------------------------------------")
 
 
