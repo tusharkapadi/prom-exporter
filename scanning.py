@@ -761,6 +761,11 @@ class SecureMetricsCollector(object):
                     all_scanning_v2.clear()
                     images_runtime_exploit_hasfix_inuse.clear()
 
+                    del all_scanning_v2
+                    del images_runtime_exploit_hasfix_inuse
+
+                    gc.collect()
+
 
             if test_scanning in test_area:
 
@@ -775,6 +780,8 @@ class SecureMetricsCollector(object):
                             scanning_prom_exp_metrics[x])
                     yield prom_metric_scanning_images
                     scanning_prom_exp_metrics.clear()
+                    del scanning_prom_exp_metrics
+                    gc.collect()
 
             if test_compliance in test_area:
                 all_compliances = read_list_from_file("all_compliances.json")
@@ -821,6 +828,8 @@ class SecureMetricsCollector(object):
                     # yield prom_metric_compliance_total
                     yield prom_metric_compliance_pass_perc
                     all_compliances.clear()
+                    del all_compliances
+                    gc.collect()
 
             if test_benchmark in test_area:
                 all_benchmarks = read_list_from_file("all_benchmarks.json")
@@ -862,6 +871,8 @@ class SecureMetricsCollector(object):
                     yield prom_metric_benchmark_control_warn
 
                     all_benchmarks.clear()
+                    del all_benchmarks
+                    gc.collect()
 
 
             if test_iam in test_area:
@@ -1006,6 +1017,12 @@ class SecureMetricsCollector(object):
                     iam_users.clear()
                     iam_roles.clear()
 
+                    del iam_policies
+                    del iam_users
+                    del iam_roles
+
+                    gc.collect()
+
             return
 
         # **********************************************************************
@@ -1146,6 +1163,7 @@ class SecureMetricsCollector(object):
 
             write_list_to_file(all_scanning_v2, "all_scanning_v2.json")
             write_list_to_file(images_runtime_exploit_hasfix_inuse, "images_runtime_exploit_hasfix_inuse.json")
+
             all_scanning_v2.clear()
             del all_scanning_v2
 
@@ -1179,6 +1197,8 @@ class SecureMetricsCollector(object):
 
             write_list_to_file(scanning_prom_exp_metrics, "scanning_prom_exp_metrics.json")
             scanning_prom_exp_metrics.clear()
+            del scanning_prom_exp_metrics
+            gc.collect()
 
         # compliance
         if test_compliance in test_area:
@@ -1287,6 +1307,8 @@ class SecureMetricsCollector(object):
 
             write_list_to_file(all_benchmarks, "all_benchmarks.json")
             all_benchmarks.clear()
+            del all_benchmarks
+            gc.collect()
 
         # iam
         if test_iam in test_area:
@@ -1436,6 +1458,12 @@ class SecureMetricsCollector(object):
 
             write_list_to_file(iam_roles, "iam_roles.json")
             iam_roles.clear()
+
+            del iam_policies
+            del iam_roles
+            del iam_users
+
+            gc.collect()
 
         first_time_running = False
 
