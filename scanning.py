@@ -644,7 +644,8 @@ class SecureMetricsCollector(object):
             print("Returning metrics from memory ")
 
             if test_scanning_v2 in test_area:
-                all_scanning_v2 = read_list_from_file("all_reading_v2.json")
+                all_scanning_v2 = read_list_from_file("all_scanning_v2.json")
+                images_runtime_exploit_hasfix_inuse = read_list_from_file("images_runtime_exploit_hasfix_inuse.json")
                 if len(all_scanning_v2) > 0:
                     print("Scanning v2 from memory - " + str(len(all_scanning_v2)))
                     for scanning in all_scanning_v2:
@@ -756,6 +757,7 @@ class SecureMetricsCollector(object):
                     yield prom_metric_scanning_v2_images_exploit_fix_inuse_count
 
                     all_scanning_v2.clear()
+                    images_runtime_exploit_hasfix_inuse.clear()
 
 
             if test_scanning in test_area:
