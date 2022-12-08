@@ -13,15 +13,15 @@ from os.path import exists
 
 from sdcclient import SdScanningClient
 
-# secure_api_token = os.getenv('SECURE_API_TOKEN').replace('\n', '')
-# secure_url = os.getenv('SECURE_URL')
-# scheduled_run_minutes = int(os.getenv('SCHEDULED_RUN_MINUTES'))
-# prom_exp_url_port = int(os.getenv('PROM_EXP_URL_PORT'))
-# batch_limit = int(os.getenv('BATCH_LIMIT'))
-# customer_name = os.getenv('CUSTOMER_NAME')
-# query_features_list = os.getenv('QUERY_FEATURES_LIST')
-# fetch_pipeline_test_only = os.getenv('QUERY_PIPELINE') # expects "yes" or "no"
-# save_list_to_file = os.getenv('SAVE_LIST_TO_FILE') # "yes" or "no" - saves fetched api data into a file and clear the   memory. Useful when you have too many images
+secure_api_token = os.getenv('SECURE_API_TOKEN').replace('\n', '')
+secure_url = os.getenv('SECURE_URL')
+scheduled_run_minutes = int(os.getenv('SCHEDULED_RUN_MINUTES'))
+prom_exp_url_port = int(os.getenv('PROM_EXP_URL_PORT'))
+batch_limit = int(os.getenv('BATCH_LIMIT'))
+customer_name = os.getenv('CUSTOMER_NAME')
+query_features_list = os.getenv('QUERY_FEATURES_LIST')
+fetch_pipeline_test_only = os.getenv('QUERY_PIPELINE') # expects "yes" or "no"
+save_list_to_file = os.getenv('SAVE_LIST_TO_FILE') # "yes" or "no" - saves fetched api data into a file and clear the   memory. Useful when you have too many images
 
 
 # all - query all features
