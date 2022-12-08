@@ -984,7 +984,7 @@ class SecureMetricsCollector(object):
             # print("scanning_v2_prom_exp_metrics count - " + str(len(all_scanning_v2)))
 
             total_requests += 1
-
+            total_ts = 0
             for scanning in all_scanning_v2:
                 prom_metric_scanning_v2_images_critical.add_metric(
                     [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
@@ -1059,6 +1059,8 @@ class SecureMetricsCollector(object):
                     scanning["exploitCount"]
                 )
 
+
+
                 prom_metric_scanning_images_v2.add_metric(
                     [scanning["origin"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
                      scanning["policyStatus"], scanning["running"], scanning["image_name"], scanning["asset_type"],
@@ -1071,6 +1073,8 @@ class SecureMetricsCollector(object):
                     len(all_scanning_v2)
                 )
 
+                total_ts = total_ts + 6
+
             for scanning in images_runtime_exploit_hasfix_inuse:
                 prom_metric_scanning_v2_images_exploit_fix_inuse_count.add_metric(
                     [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
@@ -1080,20 +1084,22 @@ class SecureMetricsCollector(object):
                     scanning["fix_exploitable_running"]
                 )
 
+                total_ts = total_ts + 1
+
 
             yield prom_metric_scanning_v2_images_critical
             yield prom_metric_scanning_v2_images_high
-            yield prom_metric_scanning_v2_images_medium
-            yield prom_metric_scanning_v2_images_low
+            #yield prom_metric_scanning_v2_images_medium
+            #yield prom_metric_scanning_v2_images_low
             yield prom_metric_scanning_v2_images_in_use_critical
             yield prom_metric_scanning_v2_images_in_use_high
-            yield prom_metric_scanning_v2_images_in_use_medium
-            yield prom_metric_scanning_v2_images_in_use_low
+            #yield prom_metric_scanning_v2_images_in_use_medium
+            #yield prom_metric_scanning_v2_images_in_use_low
             yield prom_metric_scanning_v2_images_exploit_count
             yield prom_metric_scanning_images_v2
             yield prom_metric_scanning_v2_images_exploit_fix_inuse_count
 
-            print("yielded scanning_v2 prom exporter")
+            print("Total " + str(total_ts) + " yielded for scanning_v2 prom exporter")
 
         # scanning - old
         if test_scanning in test_area:
