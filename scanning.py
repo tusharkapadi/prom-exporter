@@ -8,6 +8,7 @@ import os
 from datetime import datetime
 from datetime import timedelta
 from os.path import exists
+import gc
 
 
 
@@ -22,6 +23,7 @@ customer_name = os.getenv('CUSTOMER_NAME')
 query_features_list = os.getenv('QUERY_FEATURES_LIST')
 fetch_pipeline_test_only = os.getenv('QUERY_PIPELINE') # expects "yes" or "no"
 save_list_to_file = os.getenv('SAVE_LIST_TO_FILE') # "yes" or "no" - saves fetched api data into a file and clear the   memory. Useful when you have too many images
+
 
 
 # all - query all features
@@ -1145,7 +1147,12 @@ class SecureMetricsCollector(object):
             write_list_to_file(all_scanning_v2, "all_scanning_v2.json")
             write_list_to_file(images_runtime_exploit_hasfix_inuse, "images_runtime_exploit_hasfix_inuse.json")
             all_scanning_v2.clear()
+            del all_scanning_v2
+
             images_runtime_exploit_hasfix_inuse.clear()
+            del images_runtime_exploit_hasfix_inuse
+
+            gc.collect()
 
         # scanning - old
         if test_scanning in test_area:
@@ -1228,6 +1235,8 @@ class SecureMetricsCollector(object):
 
             write_list_to_file(all_compliances, "all_compliances.json")
             all_compliances.clear()
+            del all_compliances
+            gc.collect()
 
         # Benchmarks
 
@@ -1663,8 +1672,6 @@ def query_build_images(offset):
 
         all_build_images = json.loads(response.text)
         all_images_res = all_build_images["results"]
-
-        print("total build images found - " + str(len(all_images_res)))
 
         for x in all_images_res:
             image_data_dict["imageId"] = x["imageId"]
@@ -2319,13 +2326,16 @@ def write_list_to_file(data, file_name):
         print("saving data into file - " + file_name)
         with open(file_name, 'w') as filehandle:
             json.dump(data, filehandle)
+            filehandle.close()
 
 def read_list_from_file(file_name):
     if save_list_to_file.lower() == "yes":
         if exists(file_name):
             print("reading data from file - " + file_name)
             with open(file_name, 'r') as filehandle:
-                return json.load(filehandle)
+                data = json.load(filehandle)
+                filehandle.close()
+            return data
         else:
             print("file " + file_name + " does not exist yet")
 
