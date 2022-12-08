@@ -646,8 +646,10 @@ class SecureMetricsCollector(object):
             print("Returning metrics from memory ")
 
             if test_scanning_v2 in test_area:
-                all_scanning_v2 = read_list_from_file("all_scanning_v2.json")
-                images_runtime_exploit_hasfix_inuse = read_list_from_file("images_runtime_exploit_hasfix_inuse.json")
+                if save_list_to_file.lower() == "yes":
+                    all_scanning_v2 = read_list_from_file("all_scanning_v2.json")
+                    images_runtime_exploit_hasfix_inuse = read_list_from_file("images_runtime_exploit_hasfix_inuse.json")
+
                 if len(all_scanning_v2) > 0:
                     print("Scanning v2 from memory - " + str(len(all_scanning_v2)))
                     for scanning in all_scanning_v2:
@@ -768,8 +770,8 @@ class SecureMetricsCollector(object):
 
 
             if test_scanning in test_area:
-
-                scanning_prom_exp_metrics = read_list_from_file("scanning_prom_exp_metrics.json")
+                if save_list_to_file.lower() == "yes":
+                    scanning_prom_exp_metrics = read_list_from_file("scanning_prom_exp_metrics.json")
                 if len(scanning_prom_exp_metrics) > 0:
                     print("Scanning v1 from memory - " + str(len(scanning_prom_exp_metrics)))
                     for x in scanning_prom_exp_metrics.keys():
@@ -784,7 +786,8 @@ class SecureMetricsCollector(object):
                     gc.collect()
 
             if test_compliance in test_area:
-                all_compliances = read_list_from_file("all_compliances.json")
+                if save_list_to_file.lower() == "yes":
+                    all_compliances = read_list_from_file("all_compliances.json")
                 if len(all_compliances) > 0:
                     print("Compliance from memory - " + str(len(all_compliances)))
                     for compliance in all_compliances:
@@ -832,7 +835,8 @@ class SecureMetricsCollector(object):
                     gc.collect()
 
             if test_benchmark in test_area:
-                all_benchmarks = read_list_from_file("all_benchmarks.json")
+                if save_list_to_file.lower() == "yes":
+                    all_benchmarks = read_list_from_file("all_benchmarks.json")
                 if len(all_benchmarks) > 0:
                     print("Benchmarks from memory - " + str(len(all_benchmarks)))
                     for benchmark in all_benchmarks:
@@ -876,9 +880,10 @@ class SecureMetricsCollector(object):
 
 
             if test_iam in test_area:
-                iam_policies = read_list_from_file("iam_policies.json")
-                iam_users = read_list_from_file("iam_users.json")
-                iam_roles = read_list_from_file("iam_roles.json")
+                if save_list_to_file.lower() == "yes":
+                    iam_policies = read_list_from_file("iam_policies.json")
+                    iam_users = read_list_from_file("iam_users.json")
+                    iam_roles = read_list_from_file("iam_roles.json")
                 if len(iam_policies) > 0:
                     print("iam policies from memory - " + str(len(iam_policies)))
 
@@ -1999,9 +2004,9 @@ def query_scanning_v2_image_details(runtime_images):
                 print(response.headers)
                 if "Rate limit exceeded" in response.text:
                     print(response.headers)
-                    print("Got rate limit exceeded error message. Sleeping for 5 mins and retrying.")
+                    print("Got rate limit exceeded error message. Sleeping for 2 mins and retrying.")
                     time.sleep(120)
-                    print("retrying..." + str(a))
+                    print("retrying..." + str(a-1))
                     continue
                 else:
                     raise
