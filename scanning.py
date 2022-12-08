@@ -1173,16 +1173,18 @@ class SecureMetricsCollector(object):
 
             print("yielded scanning_v2 prom exporter")
 
-            write_list_to_file(all_scanning_v2, "all_scanning_v2.json")
-            write_list_to_file(images_runtime_exploit_hasfix_inuse, "images_runtime_exploit_hasfix_inuse.json")
+            if save_list_to_file.lower() == "yes":
 
-            all_scanning_v2.clear()
-            del all_scanning_v2
+                write_list_to_file(all_scanning_v2, "all_scanning_v2.json")
+                write_list_to_file(images_runtime_exploit_hasfix_inuse, "images_runtime_exploit_hasfix_inuse.json")
 
-            images_runtime_exploit_hasfix_inuse.clear()
-            del images_runtime_exploit_hasfix_inuse
+                all_scanning_v2.clear()
+                del all_scanning_v2
 
-            gc.collect()
+                images_runtime_exploit_hasfix_inuse.clear()
+                del images_runtime_exploit_hasfix_inuse
+
+                gc.collect()
 
         # scanning - old
         if test_scanning in test_area:
@@ -1207,10 +1209,11 @@ class SecureMetricsCollector(object):
 
             print("yielded scanning prom exporter")
 
-            write_list_to_file(scanning_prom_exp_metrics, "scanning_prom_exp_metrics.json")
-            scanning_prom_exp_metrics.clear()
-            del scanning_prom_exp_metrics
-            gc.collect()
+            if save_list_to_file.lower() == "yes":
+                write_list_to_file(scanning_prom_exp_metrics, "scanning_prom_exp_metrics.json")
+                scanning_prom_exp_metrics.clear()
+                del scanning_prom_exp_metrics
+                gc.collect()
 
         # compliance
         if test_compliance in test_area:
@@ -1265,10 +1268,11 @@ class SecureMetricsCollector(object):
 
             print("yielded compliance prom exporter")
 
-            write_list_to_file(all_compliances, "all_compliances.json")
-            all_compliances.clear()
-            del all_compliances
-            gc.collect()
+            if save_list_to_file.lower() == "yes":
+                write_list_to_file(all_compliances, "all_compliances.json")
+                all_compliances.clear()
+                del all_compliances
+                gc.collect()
 
         # Benchmarks
 
@@ -1317,10 +1321,11 @@ class SecureMetricsCollector(object):
 
             print("yielded benchmark prom exporter")
 
-            write_list_to_file(all_benchmarks, "all_benchmarks.json")
-            all_benchmarks.clear()
-            del all_benchmarks
-            gc.collect()
+            if save_list_to_file.lower() == "yes":
+                write_list_to_file(all_benchmarks, "all_benchmarks.json")
+                all_benchmarks.clear()
+                del all_benchmarks
+                gc.collect()
 
         # iam
         if test_iam in test_area:
@@ -1462,20 +1467,21 @@ class SecureMetricsCollector(object):
 
             print("yielded iam prom exporter")
 
-            write_list_to_file(iam_policies, "iam_policies.json")
-            iam_policies.clear()
+            if save_list_to_file.lower() == "yes":
+                write_list_to_file(iam_policies, "iam_policies.json")
+                iam_policies.clear()
 
-            write_list_to_file(iam_users, "iam_users.json")
-            iam_users.clear()
+                write_list_to_file(iam_users, "iam_users.json")
+                iam_users.clear()
 
-            write_list_to_file(iam_roles, "iam_roles.json")
-            iam_roles.clear()
+                write_list_to_file(iam_roles, "iam_roles.json")
+                iam_roles.clear()
 
-            del iam_policies
-            del iam_roles
-            del iam_users
+                del iam_policies
+                del iam_roles
+                del iam_users
 
-            gc.collect()
+                gc.collect()
 
         first_time_running = False
 
