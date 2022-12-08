@@ -19,6 +19,8 @@ prom_exp_url_port = int(os.getenv('PROM_EXP_URL_PORT'))
 batch_limit = int(os.getenv('BATCH_LIMIT'))
 customer_name = os.getenv('CUSTOMER_NAME')
 query_features_list = os.getenv('QUERY_FEATURES_LIST')
+fetch_pipeline_data = os.getenv('QUERY_PIPELINE') # expects "yes" or "no"
+
 
 
 # all - query all features
@@ -28,6 +30,11 @@ test_scanning_v2 = "scanning_v2"
 test_compliance = "compliance"
 test_benchmark = "benchmark"
 test_iam = "iam"
+
+
+if fetch_pipeline_data is None or len(fetch_pipeline_data) == 0:
+    fetch_pipeline_data = "yes"
+
 
 test_area = [test_scanning]
 if query_features_list == "all":
@@ -628,6 +635,8 @@ class SecureMetricsCollector(object):
 
             if test_scanning_v2 in test_area:
                 print("Scanning v2 from memory - " + str(len(all_scanning_v2)))
+
+                total_ts = 0
                 for scanning in all_scanning_v2:
                     prom_metric_scanning_v2_images_critical.add_metric(
                         [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
@@ -712,6 +721,8 @@ class SecureMetricsCollector(object):
                         len(all_scanning_v2)
                     )
 
+                    total_ts = total_ts + 6
+
                 for scanning in images_runtime_exploit_hasfix_inuse:
                     prom_metric_scanning_v2_images_exploit_fix_inuse_count.add_metric(
                         [scanning["imageId"], scanning["reg"], scanning["repo"], scanning["imagePullString"],
@@ -721,30 +732,42 @@ class SecureMetricsCollector(object):
                         scanning["fix_exploitable_running"]
                     )
 
+                    total_ts = total_ts + 1
+
                 yield prom_metric_scanning_v2_images_critical
                 yield prom_metric_scanning_v2_images_high
-                yield prom_metric_scanning_v2_images_medium
-                yield prom_metric_scanning_v2_images_low
+                #yield prom_metric_scanning_v2_images_medium
+                #yield prom_metric_scanning_v2_images_low
                 yield prom_metric_scanning_v2_images_in_use_critical
                 yield prom_metric_scanning_v2_images_in_use_high
-                yield prom_metric_scanning_v2_images_in_use_medium
-                yield prom_metric_scanning_v2_images_in_use_low
+                #yield prom_metric_scanning_v2_images_in_use_medium
+                #yield prom_metric_scanning_v2_images_in_use_low
                 yield prom_metric_scanning_v2_images_exploit_count
                 yield prom_metric_scanning_images_v2
                 yield prom_metric_scanning_v2_images_exploit_fix_inuse_count
 
+                print("Total " + str(total_ts) + " TS yielded for new scanning engine")
+
             if test_scanning in test_area:
                 print("Scanning v1 from memory - " + str(len(scanning_prom_exp_metrics)))
+
+                total_ts = 0
                 for x in scanning_prom_exp_metrics.keys():
                     temp_string = x.split("|")
                     prom_metric_scanning_images.add_metric(
                         [temp_string[0], temp_string[1], temp_string[2], temp_string[3], temp_string[4], temp_string[5],
                          temp_string[6], temp_string[7], customer_name],
                         scanning_prom_exp_metrics[x])
+
+                    total_ts = total_ts + 1
+
                 yield prom_metric_scanning_images
+
+                print("Total " + str(total_ts) + " TS yielded for old scanning engine")
 
             if test_compliance in test_area:
                 print("Compliance from memory - " + str(len(all_compliances)))
+                total_ts = total_ts + 1
                 for compliance in all_compliances:
                     prom_metric_compliance_pass.add_metric(
                         [compliance["name"], compliance["type"], compliance["schema"], compliance["framework"],
@@ -771,6 +794,8 @@ class SecureMetricsCollector(object):
                          compliance["version"], compliance["platform"], compliance["family"], customer_name],
                         compliance["control_total"])
 
+                    total_ts = total_ts + 5
+
                     # prom_metric_compliance_pass.add_metric([compliance["standard"], compliance["compliance"], compliance["compliance_type"]],
                     #                                        compliance["pass"])
                     # prom_metric_compliance_fail.add_metric([compliance["standard"], compliance["compliance"], compliance["compliance_type"]],
@@ -786,8 +811,13 @@ class SecureMetricsCollector(object):
                 # yield prom_metric_compliance_total
                 yield prom_metric_compliance_pass_perc
 
+                print("Total " + str(total_ts) + " TS yielded for compliance")
+
             if test_benchmark in test_area:
                 print("Benchmarks from memory - " + str(len(all_benchmarks)))
+
+                total_ts = 0
+
                 for benchmark in all_benchmarks:
                     prom_metric_benchmark_resource_pass.add_metric(
                         [benchmark["platform"], benchmark["name"], benchmark["schema"], benchmark["cluster_name"],
@@ -815,6 +845,8 @@ class SecureMetricsCollector(object):
                          benchmark["node_name"], customer_name],
                         benchmark["control_warn"])
 
+                    total_ts = total_ts + 6
+
                 yield prom_metric_benchmark_resource_pass
                 yield prom_metric_benchmark_resource_fail
                 yield prom_metric_benchmark_resource_warn
@@ -823,8 +855,13 @@ class SecureMetricsCollector(object):
                 yield prom_metric_benchmark_control_fail
                 yield prom_metric_benchmark_control_warn
 
+                print("Total " + str(total_ts) + " TS yielded for benchmark")
+
             if test_iam in test_area:
                 print("iam policies from memory - " + str(len(iam_policies)))
+
+                total_ts = 0
+
                 for policy in iam_policies:
                     prom_metric_iam_policy.add_metric(
                         [policy["policyName"], str(policy["actorsTotal"]), str(policy["numPermissionsGiven"]), str(policy["numPermissionsUnused"]),
@@ -875,6 +912,8 @@ class SecureMetricsCollector(object):
                         policy["excessiveRiskScore"]
                     )
 
+                    total_ts = total_ts + 7
+
                 print("iam users from memory - " + str(len(iam_users)))
                 for user in iam_users:
                     prom_metric_iam_user.add_metric(
@@ -904,6 +943,8 @@ class SecureMetricsCollector(object):
                          user["key2_not_rotated"], user["multiple_keys"], user["customerName"]],
                         user["numPermissionsUnused"]
                     )
+
+                    total_ts = total_ts + 3
 
                 print("iam roles from memory - " + str(len(iam_roles)))
                 for role in iam_roles:
@@ -935,6 +976,9 @@ class SecureMetricsCollector(object):
                         role["numPermissionsUnused"]
                     )
 
+                    total_ts = total_ts + 3
+
+
                 yield prom_metric_iam_policy
                 yield prom_metric_iam_policy_perms_given_total
                 yield prom_metric_iam_policy_perms_unused_total
@@ -951,7 +995,7 @@ class SecureMetricsCollector(object):
                 yield prom_metric_iam_role_permissions_given_total
                 yield prom_metric_iam_role_permissions_unused_total
 
-                print("yielded iam prom exporter")
+                print("Total " + str(total_ts) + " TS yielded for iam")
 
             return
 
@@ -1099,7 +1143,7 @@ class SecureMetricsCollector(object):
             yield prom_metric_scanning_images_v2
             yield prom_metric_scanning_v2_images_exploit_fix_inuse_count
 
-            print("Total " + str(total_ts) + " yielded for scanning_v2 prom exporter")
+            print("Total " + str(total_ts) + " TS yielded for new scanning engine")
 
         # scanning - old
         if test_scanning in test_area:
@@ -1114,15 +1158,19 @@ class SecureMetricsCollector(object):
 
             total_requests += 1
 
+            total_ts = 0
             for x in scanning_prom_exp_metrics.keys():
                 temp_string = x.split("|")
                 prom_metric_scanning_images.add_metric(
                     [temp_string[0], temp_string[1], temp_string[2], temp_string[3], temp_string[4], temp_string[5],
                      temp_string[6], temp_string[7], customer_name],
                     scanning_prom_exp_metrics[x])
+
+                total_ts = total_ts + 1
             yield prom_metric_scanning_images
 
-            print("yielded scanning prom exporter")
+
+            print("Total " + str(total_ts) + " TS yielded for old scanning engine")
 
         # compliance
         if test_compliance in test_area:
@@ -1130,6 +1178,8 @@ class SecureMetricsCollector(object):
             all_compliances = compliance_prom_exporter()
 
             print("all compliance count - " + str(len(all_compliances)))
+
+            total_ts = total_ts + 1
 
             for compliance in all_compliances:
                 prom_metric_compliance_pass.add_metric(
@@ -1157,6 +1207,8 @@ class SecureMetricsCollector(object):
                      compliance["version"], compliance["platform"], compliance["family"], customer_name],
                     compliance["control_total"])
 
+                total_ts = total_ts + 5
+
                 # prom_metric_compliance_pass.add_metric([compliance["standard"], compliance["compliance"], compliance["compliance_type"]],
                 #                                        compliance["pass"])
                 # prom_metric_compliance_fail.add_metric([compliance["standard"], compliance["compliance"], compliance["compliance_type"]],
@@ -1172,7 +1224,7 @@ class SecureMetricsCollector(object):
             # yield prom_metric_compliance_total
             yield prom_metric_compliance_pass_perc
 
-            print("yielded compliance prom exporter")
+            print("Total " + str(total_ts) + " TS yielded for compliance")
 
         # Benchmarks
 
@@ -1180,6 +1232,8 @@ class SecureMetricsCollector(object):
             all_benchmarks = benchmark_prom_exporter()
 
             print("all benchmark count - " + str(len(all_benchmarks)))
+
+            total_ts = 0
 
             # adding control pass, clustername, node name
             # update the code....
@@ -1211,6 +1265,8 @@ class SecureMetricsCollector(object):
                      benchmark["node_name"], customer_name],
                     benchmark["control_warn"])
 
+                total_ts = 6
+
             yield prom_metric_benchmark_resource_pass
             yield prom_metric_benchmark_resource_fail
             yield prom_metric_benchmark_resource_warn
@@ -1219,7 +1275,7 @@ class SecureMetricsCollector(object):
             yield prom_metric_benchmark_control_fail
             yield prom_metric_benchmark_control_warn
 
-            print("yielded benchmark prom exporter")
+            print("Total " + str(total_ts) + " TS yielded for benchmark")
 
 
         # iam
@@ -1358,18 +1414,17 @@ class SecureMetricsCollector(object):
             yield prom_metric_iam_role_permissions_given_total
             yield prom_metric_iam_role_permissions_unused_total
 
-            print("yielded iam prom exporter")
+            #print("Total " + str(total_ts) + " TS yielded for iam")
 
         first_time_running = False
 
 
 def scanning_v2_prom_exporter():
     try:
-
-        # commenting out pipeline for testing purpose....
-        images_pipeline = []
-        #images_pipeline = query_scanning_v2_pipeline_images_batch()
-
+        if fetch_pipeline_data == "yes":
+            images_pipeline = query_scanning_v2_pipeline_images_batch()
+        else:
+            images_pipeline = []
         images_runtime = query_scanning_v2_runtime_images_batch()
 
         print("# of images in Pipeline (Scanning v2) - " + str(len(images_pipeline)))
@@ -2251,6 +2306,7 @@ def print_info():
     print("scheduled_run_minutes: " + str(scheduled_run_minutes))
     print("customer_name: " + customer_name)
     print("Querying for: " + str(query_features_list))
+    print("fetch pipeline data = " + str(fetch_pipeline_data))
     print("-------------------------------------")
 
 
