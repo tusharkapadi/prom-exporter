@@ -1,0 +1,14 @@
+inputSet:
+  name: Build_tusharkapadi_prom_exporter_1743220172134-pr-trigger-input-set
+  identifier: Build_tusharkapadi_prom_exporter_1743220172134prtriggerinputset
+  orgIdentifier: default
+  projectIdentifier: default_project
+  pipeline:
+    identifier: Build_tusharkapadi_prom_exporter_1743220172134
+    properties:
+      ci:
+        codebase:
+          build:
+            type: PR
+            spec:
+              number: <+trigger.prNumber>
