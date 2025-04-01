@@ -67,6 +67,7 @@ pipeline:
         type: CI
         failureStrategies:
           - onFailure:
-              errors: []
+              errors:
+                - AllErrors
               action:
                 type: MarkAsSuccess
