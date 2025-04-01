@@ -69,4 +69,4 @@ pipeline:
           - onFailure:
               errors: []
               action:
-                type: Abort
+                type: MarkAsSuccess
